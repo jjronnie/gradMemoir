@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
+import TurnstileWidget from '@/components/TurnstileWidget.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -8,15 +9,31 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { register } from '@/routes';
+import { redirect } from '@/routes/google';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 defineProps<{
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
 }>();
+
+const page = usePage();
+const turnstileToken = ref('');
+const googleProcessing = ref(false);
+const turnstileEnabled = computed(() => Boolean(page.props.turnstileEnabled));
+
+const startGoogleSignIn = (): void => {
+    if (googleProcessing.value) {
+        return;
+    }
+
+    googleProcessing.value = true;
+    window.location.assign(redirect.url());
+};
 </script>
 
 <template>
@@ -32,13 +49,41 @@ defineProps<{
         >
             {{ status }}
         </div>
-
         <Form
             v-bind="store.form()"
             :reset-on-success="['password']"
+            :transform="
+                (data) => ({
+                    ...data,
+                    turnstile_token: turnstileToken,
+                })
+            "
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
+            <button
+                type="button"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+                :disabled="processing || googleProcessing"
+                @click="startGoogleSignIn"
+            >
+                <i class="fa-brands fa-google" />
+                <Spinner v-if="googleProcessing" />
+                <span>{{
+                    googleProcessing ? 'Processing...' : 'Sign in with Google'
+                }}</span>
+            </button>
+
+            <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                <span class="h-px flex-1 bg-border" />
+                OR
+                <span class="h-px flex-1 bg-border" />
+            </div>
+
+            <p class="text-center text-sm text-muted-foreground">
+                Enter your details below to sign in
+            </p>
+
             <div class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>
@@ -97,6 +142,12 @@ defineProps<{
                     Log in
                 </Button>
             </div>
+
+            <TurnstileWidget
+                v-if="turnstileEnabled"
+                @verified="turnstileToken = $event"
+            />
+            <InputError v-if="turnstileEnabled" :message="errors.turnstile" />
 
             <div
                 class="text-center text-sm text-muted-foreground"

@@ -1,127 +1,223 @@
 <script setup lang="ts">
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import AvatarUpload from '@/components/AvatarUpload.vue';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
+import LoadingButton from '@/components/LoadingButton.vue';
+import UsernameInput from '@/components/UsernameInput.vue';
+import WordCountTextarea from '@/components/WordCountTextarea.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/profile';
-import { send } from '@/routes/verification';
-import { type BreadcrumbItem } from '@/types';
-import { Form, Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 type Props = {
-    mustVerifyEmail: boolean;
-    status?: string;
+    canUpdateUsernameAt?: string | null;
 };
 
-defineProps<Props>();
-
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'Profile settings',
-        href: edit().url,
-    },
-];
+const props = defineProps<Props>();
 
 const page = usePage();
 const user = page.props.auth.user;
+
+const form = useForm({
+    name: user?.name ?? '',
+    email: user?.email ?? '',
+    username: user?.username ?? '',
+    bio: (user?.bio as string | undefined) ?? '',
+    profession: (user?.profession as string | undefined) ?? '',
+    location: (user?.location as string | undefined) ?? '',
+    phone: (user?.phone as string | undefined) ?? '',
+    facebook_username: (user?.facebook_username as string | undefined) ?? '',
+    x_username: (user?.x_username as string | undefined) ?? '',
+    tiktok_username: (user?.tiktok_username as string | undefined) ?? '',
+    instagram_username:
+        (user?.instagram_username as string | undefined) ?? '',
+    website: (user?.website as string | undefined) ?? '',
+    email_public: (user?.email_public as string | undefined) ?? '',
+});
+
+const avatarForm = useForm({
+    avatar: null as File | null,
+});
+
+const submitProfile = (): void => {
+    form.put('/settings/profile');
+};
+
+const submitAvatar = (): void => {
+    avatarForm.put('/settings/avatar', {
+        forceFormData: true,
+    });
+};
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbItems">
+    <AppLayout :breadcrumbs="[{ title: 'Profile settings', href: edit().url }]">
         <Head title="Profile settings" />
 
-        <h1 class="sr-only">Profile Settings</h1>
-
         <SettingsLayout>
-            <div class="flex flex-col space-y-6">
+            <div class="space-y-6">
                 <Heading
                     variant="small"
                     title="Profile information"
-                    description="Update your name and email address"
+                    description="Update your public and account profile details."
                 />
 
-                <Form
-                    v-bind="ProfileController.update.form()"
-                    class="space-y-6"
-                    v-slot="{ errors, processing, recentlySuccessful }"
-                >
+                <form class="space-y-6" @submit.prevent="submitProfile">
                     <div class="grid gap-2">
                         <Label for="name">Name</Label>
                         <Input
                             id="name"
-                            class="mt-1 block w-full"
-                            name="name"
-                            :default-value="user.name"
-                            required
-                            autocomplete="name"
-                            placeholder="Full name"
+                            v-model="form.name"
+                            placeholder="e.g. Jane Doe"
                         />
-                        <InputError class="mt-2" :message="errors.name" />
+                        <InputError :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">Email address</Label>
+                        <Label for="email">Email</Label>
                         <Input
                             id="email"
                             type="email"
-                            class="mt-1 block w-full"
-                            name="email"
-                            :default-value="user.email"
-                            required
-                            autocomplete="username"
-                            placeholder="Email address"
+                            v-model="form.email"
+                            placeholder="you@example.com"
                         />
-                        <InputError class="mt-2" :message="errors.email" />
+                        <InputError :message="form.errors.email" />
                     </div>
 
-                    <div v-if="mustVerifyEmail && !user.email_verified_at">
-                        <p class="-mt-4 text-sm text-muted-foreground">
-                            Your email address is unverified.
-                            <Link
-                                :href="send()"
-                                as="button"
-                                class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                            >
-                                Click here to resend the verification email.
-                            </Link>
-                        </p>
-
-                        <div
-                            v-if="status === 'verification-link-sent'"
-                            class="mt-2 text-sm font-medium text-green-600"
+                    <div class="grid gap-2">
+                        <Label>Username</Label>
+                        <UsernameInput v-model="form.username" />
+                        <p
+                            v-if="props.canUpdateUsernameAt"
+                            class="text-xs text-muted-foreground"
                         >
-                            A new verification link has been sent to your email
-                            address.
+                            Next change available on
+                            {{ new Date(props.canUpdateUsernameAt).toLocaleDateString() }}
+                        </p>
+                    </div>
+
+                    <WordCountTextarea
+                        v-model="form.bio"
+                        name="bio"
+                        placeholder="Tell your class about yourself"
+                    />
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="profession">Profession</Label>
+                            <Input
+                                id="profession"
+                                v-model="form.profession"
+                                placeholder="e.g. Photographer"
+                            />
+                            <InputError :message="form.errors.profession" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="location">Location</Label>
+                            <Input
+                                id="location"
+                                v-model="form.location"
+                                placeholder="e.g. Lagos, Nigeria"
+                            />
+                            <InputError :message="form.errors.location" />
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <Button
-                            :disabled="processing"
-                            data-test="update-profile-button"
-                            >Save</Button
-                        >
-
-                        <Transition
-                            enter-active-class="transition ease-in-out"
-                            enter-from-class="opacity-0"
-                            leave-active-class="transition ease-in-out"
-                            leave-to-class="opacity-0"
-                        >
-                            <p
-                                v-show="recentlySuccessful"
-                                class="text-sm text-neutral-600"
-                            >
-                                Saved.
-                            </p>
-                        </Transition>
+                    <div class="grid gap-2">
+                        <Label for="phone">WhatsApp Number</Label>
+                        <Input
+                            id="phone"
+                            v-model="form.phone"
+                            placeholder="+1 555 123 4567"
+                        />
+                        <InputError :message="form.errors.phone" />
                     </div>
-                </Form>
+
+                    <div class="grid gap-2">
+                        <Label for="website">Website (without https://)</Label>
+                        <Input id="website" v-model="form.website" placeholder="example.com" />
+                        <InputError :message="form.errors.website" />
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="facebook_username">Facebook</Label>
+                            <Input
+                                id="facebook_username"
+                                v-model="form.facebook_username"
+                                placeholder="facebook_username"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="x_username">X</Label>
+                            <Input
+                                id="x_username"
+                                v-model="form.x_username"
+                                placeholder="x_username"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="tiktok_username">TikTok</Label>
+                            <Input
+                                id="tiktok_username"
+                                v-model="form.tiktok_username"
+                                placeholder="tiktok_username"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="instagram_username">Instagram</Label>
+                            <Input
+                                id="instagram_username"
+                                v-model="form.instagram_username"
+                                placeholder="instagram_username"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="email_public">Public Email</Label>
+                        <Input
+                            id="email_public"
+                            type="email"
+                            v-model="form.email_public"
+                            placeholder="public-contact@example.com"
+                        />
+                        <InputError :message="form.errors.email_public" />
+                    </div>
+
+                    <LoadingButton
+                        type="submit"
+                        :loading="form.processing"
+                        loading-text="Saving..."
+                    >
+                        Save Profile
+                    </LoadingButton>
+                </form>
+            </div>
+
+            <div class="space-y-4">
+                <Heading
+                    variant="small"
+                    title="Avatar"
+                    description="Upload and replace your profile picture."
+                />
+                <form class="space-y-4" @submit.prevent="submitAvatar">
+                    <AvatarUpload
+                        v-model="avatarForm.avatar"
+                        :current-avatar="(user?.avatar as string | undefined) ?? null"
+                    />
+                    <LoadingButton
+                        type="submit"
+                        :loading="avatarForm.processing"
+                        loading-text="Uploading..."
+                    >
+                        Update Avatar
+                    </LoadingButton>
+                </form>
             </div>
 
             <DeleteUser />

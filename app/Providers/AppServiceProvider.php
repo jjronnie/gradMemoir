@@ -2,11 +2,18 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LoginResponse;
+use App\Http\Responses\RegisterResponse;
+use App\Listeners\PruneOriginalMediaAfterConversion;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use Spatie\MediaLibrary\Conversions\Events\ConversionHasBeenCompletedEvent;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
     }
 
     /**
@@ -24,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerMediaListeners();
     }
 
     protected function configureDefaults(): void
@@ -43,5 +52,10 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function registerMediaListeners(): void
+    {
+        Event::listen(ConversionHasBeenCompletedEvent::class, PruneOriginalMediaAfterConversion::class);
     }
 }

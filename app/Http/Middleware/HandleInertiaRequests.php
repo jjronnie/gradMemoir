@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Post;
+use App\Support\TurnstileVerifier;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,13 +38,55 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $photoCount = null;
+        $photoLimit = 12;
+        $photoSlotsRemaining = null;
+
+        if ($user !== null) {
+            $photoCount = Media::query()
+                ->where('model_type', Post::class)
+                ->whereIn('model_id', $user->posts()->select('id'))
+                ->count();
+            $photoSlotsRemaining = max($photoLimit - $photoCount, 0);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'appName' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user === null ? null : [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'username' => $user->username,
+                    'website' => $user->website,
+                    'is_verified' => $user->is_verified,
+                    'avatar' => $user->getFirstMediaUrl('avatar', 'thumb') !== ''
+                        ? $user->getFirstMediaUrl('avatar', 'thumb')
+                        : $user->getFirstMediaUrl('avatar', 'full'),
+                    'status' => $user->status?->value,
+                    'roles' => $user->getRoleNames()->values(),
+                    'onboarding_completed' => $user->onboarding_completed,
+                    'university_id' => $user->university_id,
+                    'course_id' => $user->course_id,
+                    'course_slug' => $user->course?->slug,
+                    'profile_url' => $user->profile_url,
+                    'email_verified_at' => optional($user->email_verified_at)?->toIso8601String(),
+                    'created_at' => optional($user->created_at)?->toIso8601String(),
+                    'photo_count' => $photoCount,
+                    'photo_limit' => $photoLimit,
+                    'photo_slots_remaining' => $photoSlotsRemaining,
+                ],
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'turnstileEnabled' => TurnstileVerifier::shouldValidate(),
+            'turnstileSiteKey' => config('services.turnstile.site_key'),
         ];
     }
 }

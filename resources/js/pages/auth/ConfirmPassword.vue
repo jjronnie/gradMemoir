@@ -32,6 +32,7 @@ import { Form, Head } from '@inertiajs/vue3';
                         required
                         autocomplete="current-password"
                         autofocus
+                        placeholder="Enter your password"
                     />
 
                     <InputError :message="errors.password" />

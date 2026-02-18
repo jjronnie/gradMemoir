@@ -4,11 +4,15 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
+use App\Support\TurnstileVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -29,6 +33,7 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureActions();
+        $this->configureAuthentication();
         $this->configureViews();
         $this->configureRateLimiting();
     }
@@ -40,6 +45,30 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+    }
+
+    /**
+     * Configure custom authentication hooks.
+     */
+    private function configureAuthentication(): void
+    {
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $token = (string) $request->input('turnstile_token', $request->input('cf-turnstile-response'));
+
+            if (! TurnstileVerifier::verify($token, $request->ip())) {
+                throw ValidationException::withMessages([
+                    'turnstile' => 'Turnstile verification failed. Please try again.',
+                ]);
+            }
+
+            $user = User::query()->where('email', $request->string('email'))->first();
+
+            if ($user !== null && Hash::check((string) $request->input('password'), (string) $user->password)) {
+                return $user;
+            }
+
+            return null;
+        });
     }
 
     /**

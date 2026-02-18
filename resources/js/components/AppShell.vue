@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BottomNav from '@/components/BottomNav.vue';
+import { useProgress } from '@/composables/useProgress';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import type { AppShellVariant } from '@/types';
 import { usePage } from '@inertiajs/vue3';
@@ -10,13 +12,28 @@ type Props = {
 defineProps<Props>();
 
 const isOpen = usePage().props.sidebarOpen;
+const progress = useProgress();
 </script>
 
 <template>
-    <div v-if="variant === 'header'" class="flex min-h-screen w-full flex-col">
+    <div v-if="variant === 'header'" class="flex min-h-screen w-full flex-col pb-24 lg:pb-0">
+        <div
+            v-if="progress.isActive"
+            class="fixed top-0 left-0 z-50 h-1 bg-primary transition-all duration-200"
+            :style="{ width: `${progress.percent}%` }"
+        />
         <slot />
+        <BottomNav />
     </div>
     <SidebarProvider v-else :default-open="isOpen">
-        <slot />
+        <div class="flex min-h-screen w-full pb-24 lg:pb-0">
+            <div
+                v-if="progress.isActive"
+                class="fixed top-0 left-0 z-50 h-1 bg-primary transition-all duration-200"
+                :style="{ width: `${progress.percent}%` }"
+            />
+            <slot />
+            <BottomNav />
+        </div>
     </SidebarProvider>
 </template>

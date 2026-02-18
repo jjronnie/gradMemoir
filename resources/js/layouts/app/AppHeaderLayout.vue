@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppContent from '@/components/AppContent.vue';
+import FlashMessages from '@/components/FlashMessages.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppShell from '@/components/AppShell.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -14,9 +15,10 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <AppShell class="flex-col">
+    <AppShell variant="header" class="flex-col">
         <AppHeader :breadcrumbs="breadcrumbs" />
         <AppContent>
+            <FlashMessages class="px-4 pt-4" />
             <slot />
         </AppContent>
     </AppShell>

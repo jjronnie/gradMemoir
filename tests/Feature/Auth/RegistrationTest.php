@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -13,7 +15,12 @@ class RegistrationTest extends TestCase
     {
         $response = $this->get(route('register'));
 
-        $response->assertOk();
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('auth/Register')
+                ->where('turnstileEnabled', false)
+            );
     }
 
     public function test_new_users_can_register()
@@ -23,9 +30,16 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'turnstile_token' => '',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect('/onboarding');
+
+        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+
+        $this->assertNotNull($user->username);
+        $this->assertSame('student', $user->role->value);
+        $this->assertFalse($user->onboarding_completed);
     }
 }

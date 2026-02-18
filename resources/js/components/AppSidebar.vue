@@ -13,28 +13,78 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookMarked,
+    Flag,
+    FolderKanban,
+    GraduationCap,
+    LayoutGrid,
+    Sparkles,
+    Users,
+} from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const isSuperadmin = computed(() => user.value?.roles?.includes('superadmin'));
+
+const mainNavItems = computed<NavItem[]>(() => {
+    if (isSuperadmin.value) {
+        return [
+            {
+                title: 'Dashboard',
+                href: '/admin/dashboard',
+                icon: LayoutGrid,
+            },
+            {
+                title: 'Universities',
+                href: '/admin/universities',
+                icon: BookMarked,
+            },
+            {
+                title: 'Courses',
+                href: '/admin/courses',
+                icon: GraduationCap,
+            },
+            {
+                title: 'Users',
+                href: '/admin/users',
+                icon: Users,
+            },
+            {
+                title: 'Featured Profiles',
+                href: '/admin/featured-profiles',
+                icon: Sparkles,
+            },
+            {
+                title: 'Applications',
+                href: '/admin/applications',
+                icon: FolderKanban,
+            },
+            {
+                title: 'Flags',
+                href: '/admin/flags',
+                icon: Flag,
+            },
+        ];
+    }
+
+    return [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+    ];
+});
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Developer',
+        href: 'https://techtowerinc.com',
+        icon: Sparkles,
     },
 ];
 </script>
@@ -45,7 +95,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link :href="isSuperadmin ? '/admin/dashboard' : dashboard()">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
