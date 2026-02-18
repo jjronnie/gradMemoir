@@ -254,80 +254,86 @@ const executeConfirmAction = (): void => {
                     Warning: more than 20 featured profiles may reduce homepage
                     quality.
                 </p>
-
-                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <article
-                        v-for="profile in featuredProfiles.data"
-                        :key="profile.id"
-                        class="rounded-lg border border-border p-3"
-                    >
-                        <div class="flex items-start gap-3">
-                            <img
-                                v-if="profilePhotoUrl(profile.user?.media)"
-                                :src="
-                                    profilePhotoUrl(profile.user?.media) ?? ''
-                                "
-                                :alt="profile.user?.name ?? 'Profile photo'"
-                                class="h-12 w-12 rounded object-cover"
-                                loading="lazy"
-                            />
-                            <div
-                                v-else
-                                class="flex h-12 w-12 items-center justify-center rounded bg-muted text-xs text-muted-foreground"
+                <div
+                    v-if="featuredProfiles.data.length > 0"
+                    class="overflow-x-auto rounded-lg border border-border"
+                >
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                            <tr>
+                                <th class="px-4 py-3">Order</th>
+                                <th class="px-4 py-3">Photo</th>
+                                <th class="px-4 py-3">Name</th>
+                                <th class="px-4 py-3">Username</th>
+                                <th class="px-4 py-3">Email</th>
+                                <th class="px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="profile in featuredProfiles.data"
+                                :key="profile.id"
+                                class="border-t border-border align-middle"
                             >
-                                N/A
-                            </div>
-
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-semibold">
-                                    {{ profile.user?.name }}
-                                </p>
-                                <p
-                                    class="truncate text-xs text-muted-foreground"
-                                >
+                                <td class="px-4 py-3">{{ profile.sort_order }}</td>
+                                <td class="px-4 py-3">
+                                    <img
+                                        v-if="profilePhotoUrl(profile.user?.media)"
+                                        :src="profilePhotoUrl(profile.user?.media) ?? ''"
+                                        :alt="profile.user?.name ?? 'Profile photo'"
+                                        class="h-10 w-10 rounded object-cover"
+                                        loading="lazy"
+                                    />
+                                    <div
+                                        v-else
+                                        class="flex h-10 w-10 items-center justify-center rounded bg-muted text-xs text-muted-foreground"
+                                    >
+                                        N/A
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 font-medium">
+                                    {{ profile.user?.name ?? 'Unknown user' }}
+                                </td>
+                                <td class="px-4 py-3 text-muted-foreground">
                                     @{{ profile.user?.username }}
-                                </p>
-                                <p
-                                    class="truncate text-xs text-muted-foreground"
-                                >
+                                </td>
+                                <td class="px-4 py-3 text-muted-foreground">
                                     {{ profile.user?.email }}
-                                </p>
-                                <p class="mt-1 text-xs text-muted-foreground">
-                                    Sort order: {{ profile.sort_order }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <a
-                                v-if="profile.user?.username"
-                                :href="`/@${profile.user.username}`"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs hover:bg-accent"
-                            >
-                                Show
-                            </a>
-                            <LoadingButton
-                                type="button"
-                                size="sm"
-                                variant="destructive"
-                                :loading="deletingId === profile.id"
-                                loading-text="Removing..."
-                                @click="requestRemoveProfile(profile.id)"
-                            >
-                                Remove
-                            </LoadingButton>
-                        </div>
-                    </article>
-
-                    <p
-                        v-if="featuredProfiles.data.length === 0"
-                        class="text-sm text-muted-foreground"
-                    >
-                        No featured profiles yet.
-                    </p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <a
+                                            v-if="profile.user?.username"
+                                            :href="`/@${profile.user.username}`"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="inline-flex h-8 items-center rounded-md border border-border px-3 text-xs hover:bg-accent"
+                                        >
+                                            Show
+                                        </a>
+                                        <LoadingButton
+                                            type="button"
+                                            size="sm"
+                                            variant="destructive"
+                                            :loading="deletingId === profile.id"
+                                            loading-text="Removing..."
+                                            @click="requestRemoveProfile(profile.id)"
+                                        >
+                                            Remove
+                                        </LoadingButton>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
+                    No featured profiles yet.
+                </p>
             </div>
         </div>
 

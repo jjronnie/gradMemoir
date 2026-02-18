@@ -3,9 +3,10 @@ import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 type UserPayload = {
     id: number;
@@ -19,11 +20,28 @@ type UserPayload = {
     status: 'active' | 'suspended' | 'banned';
     university?: { name?: string | null } | null;
     course?: { name?: string | null } | null;
+    university_id?: number | null;
+    course_id?: number | null;
+};
+
+type UniversityOption = {
+    id: number;
+    name: string;
+};
+
+type CourseOption = {
+    id: number;
+    name: string;
+    short_name: string;
+    year: string;
+    university_id: number;
 };
 
 const props = defineProps<{
     user: UserPayload;
     currentUserId?: number | null;
+    universities: UniversityOption[];
+    courses: CourseOption[];
 }>();
 
 const detailsForm = useForm({
@@ -35,6 +53,8 @@ const detailsForm = useForm({
     email_verified_at: props.user.email_verified_at
         ? String(props.user.email_verified_at).slice(0, 16)
         : '',
+    university_id: props.user.university_id ?? null,
+    course_id: props.user.course_id ?? null,
 });
 
 const statusForm = useForm({
@@ -47,6 +67,28 @@ const roleForm = useForm({
 
 const canEditRoleAndStatus = computed(
     () => props.currentUserId === null || props.currentUserId !== props.user.id,
+);
+
+const filteredCourses = computed(() => {
+    if (detailsForm.university_id === null) {
+        return [];
+    }
+
+    return props.courses.filter(
+        (course) => course.university_id === detailsForm.university_id,
+    );
+});
+
+watch(
+    () => detailsForm.university_id,
+    () => {
+        if (
+            detailsForm.course_id !== null &&
+            !filteredCourses.value.some((course) => course.id === detailsForm.course_id)
+        ) {
+            detailsForm.course_id = null;
+        }
+    },
 );
 
 const saveDetails = (): void => {
@@ -140,6 +182,45 @@ const saveRole = (): void => {
                             placeholder="example.com"
                         />
                         <InputError :message="detailsForm.errors.website" />
+                    </div>
+                    <div class="grid gap-2 md:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="university_id">University</Label>
+                            <select
+                                id="university_id"
+                                v-model="detailsForm.university_id"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                                <option :value="null">Not set</option>
+                                <option
+                                    v-for="university in universities"
+                                    :key="university.id"
+                                    :value="university.id"
+                                >
+                                    {{ university.name }}
+                                </option>
+                            </select>
+                            <InputError :message="detailsForm.errors.university_id" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="course_id">Course</Label>
+                            <select
+                                id="course_id"
+                                v-model="detailsForm.course_id"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                                <option :value="null">Not set</option>
+                                <option
+                                    v-for="course in filteredCourses"
+                                    :key="course.id"
+                                    :value="course.id"
+                                >
+                                    {{ course.short_name }} Class of
+                                    {{ course.year }}
+                                </option>
+                            </select>
+                            <InputError :message="detailsForm.errors.course_id" />
+                        </div>
                     </div>
                     <label class="flex items-center gap-2 text-xs">
                         <input

@@ -65,6 +65,8 @@ type SocialLink = {
     label: string;
 };
 
+type DetailRowKey = 'university' | 'course' | 'location' | 'joined' | 'bio';
+
 const isCarouselOpen = ref(false);
 const isProfileImageOpen = ref(false);
 const selectedPhotos = ref<
@@ -93,14 +95,48 @@ const profileInitial = computed(
     () => props.profile.name.trim().charAt(0).toUpperCase() || 'U',
 );
 
-const truncatedLocation = computed(() => {
-    const location = props.profile.location?.trim() ?? '';
-
-    if (location === '') {
+const courseLabel = computed(() => {
+    if (!props.profile.course?.short_name || !props.profile.course?.year) {
         return null;
     }
 
-    return location.length > 15 ? `${location.slice(0, 15)}...` : location;
+    return `${props.profile.course.short_name.toUpperCase()} Class of ${props.profile.course.year}`;
+});
+
+const hasUniversity = computed(() =>
+    Boolean(props.profile.university?.name && props.profile.university?.slug),
+);
+const hasCourse = computed(() =>
+    Boolean(props.profile.course?.slug && courseLabel.value),
+);
+const hasLocation = computed(() => Boolean(props.profile.location));
+const hasJoined = computed(() => Boolean(joinedLabel.value));
+const hasBio = computed(() => Boolean(props.profile.bio));
+
+const detailRows = computed<DetailRowKey[]>(() => {
+    const rows: DetailRowKey[] = [];
+
+    if (hasUniversity.value) {
+        rows.push('university');
+    }
+
+    if (hasCourse.value) {
+        rows.push('course');
+    }
+
+    if (hasLocation.value) {
+        rows.push('location');
+    }
+
+    if (hasJoined.value) {
+        rows.push('joined');
+    }
+
+    if (hasBio.value) {
+        rows.push('bio');
+    }
+
+    return rows;
 });
 
 const socialLinks = computed<SocialLink[]>(() => {
@@ -278,18 +314,16 @@ onMounted(() => {
     <Head :title="`${profile.name} | ${$page.props.appName}`" />
 
     <PublicLayout>
-        <section
-            class="relative mt-6 overflow-hidden rounded-3xl border border-border bg-card"
-        >
+        <section class="mx-auto mt-6 w-[90%]">
             <div
-                class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"
-            />
-
-            <div class="relative p-5 sm:p-8">
-                <div class="flex flex-col gap-6 sm:flex-row sm:items-end">
+                class="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-10"
+            >
+                <div
+                    class="mx-auto w-full max-w-sm lg:mx-0 lg:w-72 lg:max-w-none"
+                >
                     <button
                         type="button"
-                        class="h-28 w-28 shrink-0 overflow-hidden rounded-full border border-border bg-muted sm:h-32 sm:w-32"
+                        class="h-72 w-full overflow-hidden rounded-3xl border border-border bg-muted sm:h-80 lg:h-96"
                         @click="isProfileImageOpen = true"
                     >
                         <img
@@ -301,17 +335,17 @@ onMounted(() => {
                         />
                         <div
                             v-else
-                            class="flex h-full w-full items-center justify-center text-3xl font-semibold text-muted-foreground"
+                            class="flex h-full w-full items-center justify-center text-5xl font-semibold text-muted-foreground"
                         >
                             {{ profileInitial }}
                         </div>
                     </button>
+                </div>
 
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                            <h1
-                                class="truncate text-3xl font-semibold sm:text-4xl"
-                            >
+                <div class="flex-1">
+                    <div class="text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2">
+                            <h1 class="text-3xl font-semibold sm:text-4xl">
                                 {{ profile.name }}
                             </h1>
                             <VerifiedBadgeIcon
@@ -319,106 +353,115 @@ onMounted(() => {
                                 class="size-5 shrink-0 text-primary"
                             />
                         </div>
-                        <p class="mt-1 text-muted-foreground">
+                        <p class="mt-1 text-base text-muted-foreground">
                             @{{ profile.username }}
                         </p>
-                        <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                            <span v-if="profile.profession">{{
-                                profile.profession
-                            }}</span>
-                            <span
-                                v-if="truncatedLocation"
-                                class="inline-flex items-center gap-1 text-muted-foreground"
-                            >
-                                <i class="fa-solid fa-location-dot" />
-                                {{ truncatedLocation }}
-                            </span>
-                        </div>
+                    </div>
 
-                        <div class="mt-2 space-y-2 text-sm text-muted-foreground">
+                    <div
+                        v-if="detailRows.length > 0 || socialLinks.length > 0"
+                        class="my-5 h-px bg-border"
+                    />
+
+                    <div
+                        v-if="detailRows.length > 0"
+                        class="space-y-3 text-base text-muted-foreground"
+                    >
+                        <template v-for="(row, index) in detailRows" :key="row">
+                            <div v-if="index > 0" class="h-px bg-border" />
+
                             <Link
-                                v-if="
-                                    profile.university?.name &&
-                                    profile.university?.slug
-                                "
-                                :href="`/universities/${profile.university.slug}`"
-                                class="flex items-center gap-1 text-muted-foreground hover:text-muted-foreground"
+                                v-if="row === 'university'"
+                                :href="`/universities/${profile.university?.slug}`"
+                                class="flex items-center gap-2 hover:text-foreground"
                             >
                                 <img
                                     v-if="
-                                        profile.university.media?.[0]
+                                        profile.university?.media?.[0]
                                             ?.conversions?.thumb ||
-                                        profile.university.media?.[0]
+                                        profile.university?.media?.[0]
                                             ?.original_url
                                     "
                                     :src="
-                                        profile.university.media?.[0]
+                                        profile.university?.media?.[0]
                                             ?.conversions?.full ??
-                                        profile.university.media?.[0]
+                                        profile.university?.media?.[0]
                                             ?.conversions?.thumb ??
-                                        profile.university.media?.[0]
+                                        profile.university?.media?.[0]
                                             ?.original_url ??
                                         ''
                                     "
                                     :alt="
-                                        profile.university.name ??
+                                        profile.university?.name ??
                                         'University logo'
                                     "
                                     class="h-4 w-4 object-cover"
                                 />
-                                {{ profile.university.name }}
+                                <span>{{ profile.university?.name }}</span>
                             </Link>
+
                             <Link
-                                v-if="
-                                    profile.course?.short_name &&
-                                    profile.course?.year &&
-                                    profile.course?.slug
-                                "
-                                :href="`/courses/${profile.course.slug}`"
-                                class="flex items-center gap-1 text-muted-foreground hover:text-muted-foreground"
+                                v-else-if="row === 'course'"
+                                :href="`/courses/${profile.course?.slug}`"
+                                class="flex items-center gap-2 hover:text-foreground"
                             >
                                 <i class="fa-solid fa-graduation-cap" />
-                                {{ profile.course.short_name }} Class of
-                                {{ profile.course.year }}
+                                <span>{{ courseLabel }}</span>
                             </Link>
-                            <span
-                                v-if="joinedLabel"
-                                class="flex items-center gap-1 text-muted-foreground"
+
+                            <p
+                                v-else-if="row === 'location'"
+                                class="flex items-center gap-2"
+                            >
+                                <i class="fa-solid fa-location-dot" />
+                                <span>{{ profile.location }}</span>
+                            </p>
+
+                            <p
+                                v-else-if="row === 'joined'"
+                                class="flex items-center gap-2"
                             >
                                 <i class="fa-regular fa-calendar" />
-                                Joined {{ joinedLabel }}
-                            </span>
+                                <span>Joined {{ joinedLabel }}</span>
+                            </p>
+
+                            <p
+                                v-else
+                                class="flex items-start gap-2 leading-relaxed"
+                            >
+                                <i class="fa-regular fa-note-sticky pt-0.5" />
+                                <span>{{ profile.bio }}</span>
+                            </p>
+                        </template>
+                    </div>
+
+                    <div
+                        v-if="socialLinks.length > 0 && detailRows.length > 0"
+                        class="mt-5 h-px bg-border"
+                    />
+
+                    <div v-if="socialLinks.length > 0" class="mt-5">
+                        <div
+                            class="grid grid-cols-4 gap-3 lg:flex lg:flex-nowrap lg:justify-start lg:gap-4"
+                        >
+                            <a
+                                v-for="link in socialLinks"
+                                :key="link.key"
+                                :href="link.href"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                :aria-label="link.label"
+                                class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background text-lg hover:bg-accent"
+                            >
+                                <i :class="link.iconClass" />
+                            </a>
                         </div>
                     </div>
-                </div>
-
-                <p
-                    v-if="profile.bio"
-                    class="mt-6 max-w-3xl text-sm leading-relaxed text-muted-foreground"
-                >
-                    {{ profile.bio }}
-                </p>
-
-                <div class="mt-6 flex flex-wrap gap-2">
-                    <a
-                        v-for="link in socialLinks"
-                        :key="link.key"
-                        :href="link.href"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        :aria-label="link.label"
-                        class="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
-                    >
-                        <i :class="link.iconClass" />
-                        <span>{{ link.label }}</span>
-                    </a>
                 </div>
             </div>
         </section>
 
-        <section class="mt-6 pb-10">
-            <h2 class="mb-3 text-lg font-semibold">Photos</h2>
-
+        <section class="mt-8 border-t border-border pt-8 pb-10">
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                 <button
                     v-for="photo in profilePhotos"

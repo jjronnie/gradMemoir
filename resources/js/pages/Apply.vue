@@ -2,6 +2,7 @@
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import TurnstileWidget from '@/components/TurnstileWidget.vue';
+import { useTurnstile } from '@/composables/useTurnstile';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -12,6 +13,7 @@ const page = usePage();
 const turnstileEnabled = computed(() =>
     Boolean(page.props.turnstileEnabled),
 );
+const turnstile = useTurnstile();
 
 const form = useForm({
     applicant_name: '',
@@ -25,7 +27,16 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post('/apply');
+    form.turnstile_token = turnstile.token.value;
+
+    form.post('/apply', {
+        onFinish: () => {
+            if (turnstileEnabled.value) {
+                turnstile.reset();
+                form.turnstile_token = '';
+            }
+        },
+    });
 };
 </script>
 
@@ -115,7 +126,9 @@ const submit = (): void => {
 
                 <TurnstileWidget
                     v-if="turnstileEnabled"
-                    @verified="form.turnstile_token = $event"
+                    @verified="turnstile.setToken($event)"
+                    @expired="turnstile.reset()"
+                    @widget-mounted="turnstile.setWidgetId($event)"
                 />
                 <InputError
                     v-if="turnstileEnabled"

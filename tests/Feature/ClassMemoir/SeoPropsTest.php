@@ -24,6 +24,15 @@ class SeoPropsTest extends TestCase
             );
     }
 
+    public function test_home_page_uses_brand_favicon_assets(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('rel="icon" href="/favicon.ico"', false)
+            ->assertSee('rel="icon" href="/favicon.png" type="image/png"', false)
+            ->assertSee('rel="apple-touch-icon" href="/apple-touch-icon.png"', false);
+    }
+
     public function test_profile_page_contains_profile_specific_seo_props(): void
     {
         $user = User::factory()->create([

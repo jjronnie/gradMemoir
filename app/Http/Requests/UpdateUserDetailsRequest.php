@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Course;
 use App\Support\UsernameGenerator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateUserDetailsRequest extends FormRequest
 {
@@ -37,6 +39,8 @@ class UpdateUserDetailsRequest extends FormRequest
             'website' => ['nullable', 'string', 'max:255', 'regex:/^(?!https?:\/\/)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}([\/\w\-.~]*)?$/'],
             'is_verified' => ['required', 'boolean'],
             'email_verified_at' => ['nullable', 'date'],
+            'university_id' => ['nullable', 'integer', 'exists:universities,id'],
+            'course_id' => ['nullable', 'integer', 'exists:courses,id'],
         ];
     }
 
@@ -65,5 +69,40 @@ class UpdateUserDetailsRequest extends FormRequest
                 'website' => $normalized === '' ? null : $normalized,
             ]);
         }
+
+        if ($this->has('university_id')) {
+            $universityId = trim((string) $this->input('university_id'));
+            $this->merge([
+                'university_id' => $universityId === '' ? null : (int) $universityId,
+            ]);
+        }
+
+        if ($this->has('course_id')) {
+            $courseId = trim((string) $this->input('course_id'));
+            $this->merge([
+                'course_id' => $courseId === '' ? null : (int) $courseId,
+            ]);
+        }
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $universityId = $this->input('university_id');
+            $courseId = $this->input('course_id');
+
+            if ($universityId === null || $courseId === null || $universityId === '' || $courseId === '') {
+                return;
+            }
+
+            $courseBelongsToUniversity = Course::query()
+                ->whereKey($courseId)
+                ->where('university_id', $universityId)
+                ->exists();
+
+            if (! $courseBelongsToUniversity) {
+                $validator->errors()->add('course_id', 'Selected course does not belong to the selected university.');
+            }
+        });
     }
 }

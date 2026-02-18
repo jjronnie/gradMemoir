@@ -16,8 +16,15 @@ defineProps<{
 
     <PublicLayout>
         <section class="py-10">
-            <h1 class="text-3xl font-semibold">Universities</h1>
-            <p class="mt-2 text-sm text-muted-foreground">
+            <div class="mx-auto w-[90%] space-y-2">
+                <div class="h-px bg-border" />
+                <div class="h-px bg-border/70" />
+            </div>
+            <h1 class="mt-6 text-center text-3xl font-semibold sm:text-4xl">
+                University Archives
+            </h1>
+            <div class="mx-auto mt-6 h-px w-[90%] bg-border" />
+            <p class="mt-4 text-center text-sm text-muted-foreground">
                 Explore available university archives.
             </p>
         </section>
@@ -29,22 +36,24 @@ defineProps<{
                 :href="`/universities/${university.slug}`"
                 class="rounded-xl border border-border bg-card p-4 hover:border-primary"
             >
-                <img
-                    v-if="
-                        university.media?.[0]?.conversions?.thumb ||
-                        university.media?.[0]?.original_url
-                    "
-                    :src="
-                        university.media?.[0]?.conversions?.full ??
-                        university.media?.[0]?.conversions?.thumb ??
-                        university.media?.[0]?.original_url ??
-                        ''
-                    "
-                    :alt="`${university.name} logo`"
-                    class="mb-3 h-12 w-12 border border-border object-cover"
-                    loading="lazy"
-                />
-                <p class="font-semibold">{{ university.name }}</p>
+                <div class="flex items-center gap-3">
+                    <img
+                        v-if="
+                            university.media?.[0]?.conversions?.thumb ||
+                            university.media?.[0]?.original_url
+                        "
+                        :src="
+                            university.media?.[0]?.conversions?.full ??
+                            university.media?.[0]?.conversions?.thumb ??
+                            university.media?.[0]?.original_url ??
+                            ''
+                        "
+                        :alt="`${university.name} logo`"
+                        class="h-12 w-12 rounded-full border border-border object-cover"
+                        loading="lazy"
+                    />
+                    <p class="font-semibold">{{ university.name }}</p>
+                </div>
                 <p class="mt-1 text-sm text-muted-foreground">
                     {{ university.location }}
                 </p>

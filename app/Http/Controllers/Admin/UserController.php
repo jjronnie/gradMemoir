@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserDetailsRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 use App\Http\Requests\UpdateUserStatusRequest;
+use App\Models\Course;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,6 +91,8 @@ class UserController extends Controller
             'website' => $validated['website'] ?? null,
             'is_verified' => (bool) $validated['is_verified'],
             'email_verified_at' => $validated['email_verified_at'] ?? null,
+            'university_id' => $validated['university_id'] ?? null,
+            'course_id' => $validated['course_id'] ?? null,
         ]);
 
         return back()->with('success', 'User details updated.');
@@ -97,10 +101,18 @@ class UserController extends Controller
     public function edit(User $user): Response
     {
         $user->load(['course', 'university']);
+        $universities = University::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $courses = Course::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'short_name', 'year', 'university_id']);
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
             'currentUserId' => request()->user()?->id,
+            'universities' => $universities,
+            'courses' => $courses,
         ]);
     }
 

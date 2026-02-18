@@ -6,6 +6,7 @@ type TurnstileRenderOptions = {
     sitekey: string;
     callback?: (token: string) => void;
     'expired-callback'?: () => void;
+    'error-callback'?: () => void;
     theme?: 'light' | 'dark' | 'auto';
 };
 
@@ -73,6 +74,9 @@ onMounted(async () => {
             emit('verified', token);
         },
         'expired-callback': () => {
+            emit('expired');
+        },
+        'error-callback': () => {
             emit('expired');
         },
         theme: 'auto',

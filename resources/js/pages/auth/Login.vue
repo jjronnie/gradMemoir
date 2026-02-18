@@ -2,6 +2,7 @@
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import TurnstileWidget from '@/components/TurnstileWidget.vue';
+import { useTurnstile } from '@/composables/useTurnstile';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -22,9 +23,10 @@ defineProps<{
 }>();
 
 const page = usePage();
-const turnstileToken = ref('');
 const googleProcessing = ref(false);
+const showPassword = ref(false);
 const turnstileEnabled = computed(() => Boolean(page.props.turnstileEnabled));
+const turnstile = useTurnstile();
 
 const startGoogleSignIn = (): void => {
     if (googleProcessing.value) {
@@ -33,6 +35,12 @@ const startGoogleSignIn = (): void => {
 
     googleProcessing.value = true;
     window.location.assign(redirect.url());
+};
+
+const resetTurnstile = (): void => {
+    if (turnstileEnabled.value) {
+        turnstile.reset();
+    }
 };
 </script>
 
@@ -55,9 +63,10 @@ const startGoogleSignIn = (): void => {
             :transform="
                 (data) => ({
                     ...data,
-                    turnstile_token: turnstileToken,
+                    turnstile_token: turnstile.token.value,
                 })
             "
+            @finish="resetTurnstile"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
@@ -112,15 +121,34 @@ const startGoogleSignIn = (): void => {
                             Forgot password?
                         </TextLink>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        name="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        placeholder="Password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            name="password"
+                            required
+                            :tabindex="2"
+                            autocomplete="current-password"
+                            placeholder="Password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            class="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                            :aria-label="
+                                showPassword ? 'Hide password' : 'Show password'
+                            "
+                            @click="showPassword = !showPassword"
+                        >
+                            <i
+                                :class="
+                                    showPassword
+                                        ? 'fa-regular fa-eye-slash'
+                                        : 'fa-regular fa-eye'
+                                "
+                            />
+                        </button>
+                    </div>
                     <InputError :message="errors.password" />
                 </div>
 
@@ -145,7 +173,9 @@ const startGoogleSignIn = (): void => {
 
             <TurnstileWidget
                 v-if="turnstileEnabled"
-                @verified="turnstileToken = $event"
+                @verified="turnstile.setToken($event)"
+                @expired="turnstile.reset()"
+                @widget-mounted="turnstile.setWidgetId($event)"
             />
             <InputError v-if="turnstileEnabled" :message="errors.turnstile" />
 

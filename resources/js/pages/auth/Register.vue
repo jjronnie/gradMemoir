@@ -2,6 +2,7 @@
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import TurnstileWidget from '@/components/TurnstileWidget.vue';
+import { useTurnstile } from '@/composables/useTurnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +15,11 @@ import { Form, Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const page = usePage();
-const turnstileToken = ref('');
 const googleProcessing = ref(false);
+const showPassword = ref(false);
+const showPasswordConfirmation = ref(false);
 const turnstileEnabled = computed(() => Boolean(page.props.turnstileEnabled));
+const turnstile = useTurnstile();
 
 const startGoogleSignIn = (): void => {
     if (googleProcessing.value) {
@@ -25,6 +28,12 @@ const startGoogleSignIn = (): void => {
 
     googleProcessing.value = true;
     window.location.assign(redirect.url());
+};
+
+const resetTurnstile = (): void => {
+    if (turnstileEnabled.value) {
+        turnstile.reset();
+    }
 };
 </script>
 
@@ -41,9 +50,10 @@ const startGoogleSignIn = (): void => {
             :transform="
                 (data) => ({
                     ...data,
-                    turnstile_token: turnstileToken,
+                    turnstile_token: turnstile.token.value,
                 })
             "
+            @finish="resetTurnstile"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
@@ -102,29 +112,74 @@ const startGoogleSignIn = (): void => {
 
                 <div class="grid gap-2">
                     <Label for="password">Password</Label>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        :tabindex="3"
-                        autocomplete="new-password"
-                        name="password"
-                        placeholder="Password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            required
+                            :tabindex="3"
+                            autocomplete="new-password"
+                            name="password"
+                            placeholder="Password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            class="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                            :aria-label="
+                                showPassword ? 'Hide password' : 'Show password'
+                            "
+                            @click="showPassword = !showPassword"
+                        >
+                            <i
+                                :class="
+                                    showPassword
+                                        ? 'fa-regular fa-eye-slash'
+                                        : 'fa-regular fa-eye'
+                                "
+                            />
+                        </button>
+                    </div>
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
                     <Label for="password_confirmation">Confirm password</Label>
-                    <Input
-                        id="password_confirmation"
-                        type="password"
-                        required
-                        :tabindex="4"
-                        autocomplete="new-password"
-                        name="password_confirmation"
-                        placeholder="Confirm password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password_confirmation"
+                            :type="
+                                showPasswordConfirmation ? 'text' : 'password'
+                            "
+                            required
+                            :tabindex="4"
+                            autocomplete="new-password"
+                            name="password_confirmation"
+                            placeholder="Confirm password"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            class="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                            :aria-label="
+                                showPasswordConfirmation
+                                    ? 'Hide password confirmation'
+                                    : 'Show password confirmation'
+                            "
+                            @click="
+                                showPasswordConfirmation =
+                                    !showPasswordConfirmation
+                            "
+                        >
+                            <i
+                                :class="
+                                    showPasswordConfirmation
+                                        ? 'fa-regular fa-eye-slash'
+                                        : 'fa-regular fa-eye'
+                                "
+                            />
+                        </button>
+                    </div>
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
@@ -142,7 +197,9 @@ const startGoogleSignIn = (): void => {
 
             <TurnstileWidget
                 v-if="turnstileEnabled"
-                @verified="turnstileToken = $event"
+                @verified="turnstile.setToken($event)"
+                @expired="turnstile.reset()"
+                @widget-mounted="turnstile.setWidgetId($event)"
             />
             <InputError v-if="turnstileEnabled" :message="errors.turnstile" />
 
