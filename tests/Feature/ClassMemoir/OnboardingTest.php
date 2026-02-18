@@ -41,12 +41,10 @@ class OnboardingTest extends TestCase
             'university_id' => $university->id,
             'course_id' => $course->id,
             'username' => 'test_user_name',
-            'bio' => 'Class memoir bio',
-            'profession' => 'Engineer',
-            'location' => 'New York',
         ]);
 
         $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', 'Onboarding completed. You can now complete your profile and add your 12 memories.');
 
         $user->refresh();
 

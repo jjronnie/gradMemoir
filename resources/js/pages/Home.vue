@@ -62,7 +62,7 @@ const tileClass = (rowIndex: number, tileIndex: number): string => {
 </script>
 
 <template>
-    <Head title="Home" />
+    <Head :title="`${$page.props.appName} - Lets keep it here`" />
 
     <PublicLayout>
         <section class="py-14 text-center">
@@ -73,8 +73,8 @@ const tileClass = (rowIndex: number, tileIndex: number): string => {
                 {{ $page.props.appName }}
             </h1>
             <p class="mx-auto mt-5 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
-                Production photographers and visual storytellers sharing graduation-era
-                work, portfolio highlights, and timeless class memoir moments.
+                A class memoir platform where students preserve graduation photos,
+                profiles, and stories with their course community in one archive.
             </p>
         </section>
 
@@ -92,7 +92,7 @@ const tileClass = (rowIndex: number, tileIndex: number): string => {
                         class="overflow-hidden border border-border bg-card"
                     >
                         <img
-                            :src="photo.thumb || photo.full"
+                            :src="photo.full || photo.thumb"
                             alt="Featured gallery photo"
                             class="h-full w-full object-cover"
                             loading="lazy"

@@ -4,6 +4,34 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @php
+            $appName = config('app.name', 'Laravel');
+            $pageProps = $page['props'] ?? [];
+            $seo = $pageProps['seo'] ?? [];
+            $appUrl = rtrim((string) ($pageProps['appUrl'] ?? config('app.url', request()->getSchemeAndHttpHost())), '/');
+
+            $seoTitle = (string) ($seo['title'] ?? $appName);
+            $seoDescription = (string) ($seo['description'] ?? 'Lets keep it here. Preserve class memories, profiles, and graduation stories in one place.');
+            $seoType = (string) ($seo['type'] ?? 'website');
+            $seoImage = (string) ($seo['image'] ?? url('/featured.webp'));
+            $seoImage = str_starts_with($seoImage, 'http')
+                ? $seoImage
+                : $appUrl.'/'.ltrim($seoImage, '/');
+            $seoUrl = request()->fullUrl();
+        @endphp
+
+        <meta name="description" content="{{ $seoDescription }}">
+        <meta property="og:site_name" content="{{ $appName }}">
+        <meta property="og:type" content="{{ $seoType }}">
+        <meta property="og:title" content="{{ $seoTitle }}">
+        <meta property="og:description" content="{{ $seoDescription }}">
+        <meta property="og:image" content="{{ $seoImage }}">
+        <meta property="og:url" content="{{ $seoUrl }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $seoTitle }}">
+        <meta name="twitter:description" content="{{ $seoDescription }}">
+        <meta name="twitter:image" content="{{ $seoImage }}">
+        <link rel="canonical" href="{{ $seoUrl }}">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -31,7 +59,7 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ $seoTitle }}</title>
 
         <link rel="icon" href="/logo.png" type="image/png">
         <link rel="apple-touch-icon" href="/logo.png">

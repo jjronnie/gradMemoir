@@ -1,0 +1,1 @@
+import{a as r}from"./AppLayout.vue_vue_type_script_setup_true_lang-CCIfOzg-.js";import{d as s,p as t,u as l,J as n,w as p,G as i,o as g}from"./app-BwoDBmTi.js";const m=s({__name:"DialogTrigger",props:{asChild:{type:Boolean},as:{}},setup(a){const e=a;return(o,d)=>(g(),t(l(r),n({"data-slot":"dialog-trigger"},e),{default:p(()=>[i(o.$slots,"default")]),_:3},16))}});export{m as _};

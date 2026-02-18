@@ -3,7 +3,6 @@ import AvatarUpload from '@/components/AvatarUpload.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import UsernameInput from '@/components/UsernameInput.vue';
-import WordCountTextarea from '@/components/WordCountTextarea.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -27,16 +26,12 @@ const localErrors = ref<Record<string, string | null>>({
     university_id: null,
     course_id: null,
     username: null,
-    bio: null,
 });
 
 const form = useForm({
     university_id: props.selectedUniversityId,
     course_id: null as number | null,
     username: (page.props.auth.user?.username as string | undefined) ?? '',
-    bio: '',
-    profession: '',
-    location: '',
     avatar: null as File | null,
 });
 
@@ -62,12 +57,6 @@ const filteredCourses = computed(() => {
             .toLowerCase()
             .includes(term),
     );
-});
-
-const bioWordCount = computed(() => {
-    const value = form.bio.trim();
-
-    return value === '' ? 0 : value.split(/\s+/).length;
 });
 
 const normalizedUsername = computed(() => form.username.trim().toLowerCase());
@@ -136,16 +125,6 @@ const validateCurrentStep = (): boolean => {
         return true;
     }
 
-    if (currentStep.value === 5) {
-        if (bioWordCount.value > 100) {
-            localErrors.value.bio = 'Bio may not exceed 100 words.';
-            return false;
-        }
-
-        localErrors.value.bio = null;
-        return true;
-    }
-
     return true;
 };
 
@@ -154,7 +133,7 @@ const next = (): void => {
         return;
     }
 
-    if (currentStep.value < 5) {
+    if (currentStep.value < 4) {
         currentStep.value += 1;
     }
 };
@@ -184,11 +163,11 @@ const submit = (): void => {
             <div class="space-y-2">
                 <h1 class="text-2xl font-semibold">Complete your profile</h1>
                 <p class="text-sm text-muted-foreground">
-                    Step {{ currentStep }} of 5
+                    Step {{ currentStep }} of 4
                 </p>
-                <div class="grid grid-cols-5 gap-2">
+                <div class="grid grid-cols-4 gap-2">
                     <div
-                        v-for="step in 5"
+                        v-for="step in 4"
                         :key="step"
                         class="h-1.5 rounded-full"
                         :class="
@@ -286,40 +265,6 @@ const submit = (): void => {
                 <AvatarUpload v-model="form.avatar" />
             </section>
 
-            <section
-                v-if="currentStep === 5"
-                class="space-y-4 rounded-xl border border-border bg-card p-4"
-            >
-                <h2 class="font-semibold">Complete Profile</h2>
-                <WordCountTextarea
-                    v-model="form.bio"
-                    name="bio"
-                    placeholder="Tell your class about yourself..."
-                />
-                <InputError :message="localErrors.bio" />
-
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div class="grid gap-2">
-                        <Label for="profession">Profession</Label>
-                        <Input
-                            id="profession"
-                            v-model="form.profession"
-                            placeholder="e.g. Photographer"
-                        />
-                        <InputError :message="form.errors.profession" />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="location">Location</Label>
-                        <Input
-                            id="location"
-                            v-model="form.location"
-                            placeholder="e.g. Lagos, Nigeria"
-                        />
-                        <InputError :message="form.errors.location" />
-                    </div>
-                </div>
-            </section>
-
             <div class="flex items-center justify-between">
                 <LoadingButton
                     type="button"
@@ -332,7 +277,7 @@ const submit = (): void => {
                     Back
                 </LoadingButton>
                 <LoadingButton
-                    v-if="currentStep < 5"
+                    v-if="currentStep < 4"
                     type="button"
                     :loading="form.processing"
                     loading-text="Validating..."

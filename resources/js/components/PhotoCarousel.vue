@@ -205,7 +205,9 @@ onUnmounted(() => {
 
 <template>
     <Dialog :open="modelValue" @update:open="emit('update:modelValue', $event)">
-        <DialogContent class="max-h-[94vh] w-[min(95vw,72rem)] overflow-y-auto">
+        <DialogContent
+            class="scrollbar-hide max-h-[94vh] w-[min(95vw,72rem)] overflow-y-auto"
+        >
             <DialogHeader>
                 <DialogTitle>{{ title }}</DialogTitle>
             </DialogHeader>

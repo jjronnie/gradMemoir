@@ -54,6 +54,12 @@ class HomeController extends Controller
             'featuredProfiles' => $featuredProfiles,
             'universities' => $universities,
             'galleryPhotos' => $galleryPhotos,
+            'seo' => [
+                'title' => config('app.name').' - Lets keep it here',
+                'description' => 'Lets keep it here. Explore featured class memories and graduation portfolios.',
+                'image' => url('/featured.webp'),
+                'type' => 'website',
+            ],
         ]);
     }
 }

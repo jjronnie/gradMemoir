@@ -62,6 +62,28 @@ const greeting = computed(() => {
                 </p>
             </section>
 
+            <section class="rounded-xl border border-border bg-card p-4">
+                <h2 class="text-sm font-semibold">You are ready</h2>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Complete your full profile details and start adding your 12
+                    class memories.
+                </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <Link
+                        href="/settings/profile"
+                        class="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"
+                    >
+                        Complete Profile
+                    </Link>
+                    <Link
+                        href="/posts/create"
+                        class="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"
+                    >
+                        Add Memories
+                    </Link>
+                </div>
+            </section>
+
             <section class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Link
                     :href="

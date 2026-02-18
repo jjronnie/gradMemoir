@@ -55,6 +55,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'appName' => config('app.name'),
+            'appUrl' => rtrim((string) (config('app.url') ?: $request->getSchemeAndHttpHost()), '/'),
+            'seo' => [
+                'title' => config('app.name'),
+                'description' => 'Lets keep it here. Preserve class memories, profiles, and graduation stories in one place.',
+                'image' => url('/featured.webp'),
+                'type' => 'website',
+            ],
             'auth' => [
                 'user' => $user === null ? null : [
                     'id' => $user->id,

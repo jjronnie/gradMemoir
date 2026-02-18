@@ -76,9 +76,6 @@ class OnboardingController extends Controller
                 'course_id' => $validated['course_id'],
                 'username' => $validated['username'],
                 'username_updated_at' => now(),
-                'bio' => $validated['bio'] ?? null,
-                'profession' => $validated['profession'] ?? null,
-                'location' => $validated['location'] ?? null,
                 'onboarding_completed' => true,
             ])->save();
 
@@ -92,6 +89,9 @@ class OnboardingController extends Controller
             }
         });
 
-        return redirect()->route('dashboard')->with('success', 'Onboarding completed.');
+        return redirect()->route('dashboard')->with(
+            'success',
+            'Onboarding completed. You can now complete your profile and add your 12 memories.'
+        );
     }
 }

@@ -19,6 +19,12 @@ class UniversityArchiveController extends Controller
 
         return Inertia::render('Universities/Index', [
             'universities' => $universities,
+            'seo' => [
+                'title' => 'Universities - '.config('app.name'),
+                'description' => 'Discover universities and class archives.',
+                'image' => url('/featured.webp'),
+                'type' => 'website',
+            ],
         ]);
     }
 
@@ -37,9 +43,17 @@ class UniversityArchiveController extends Controller
             ->orderBy('name')
             ->get();
 
+        $logo = $university->getFirstMediaUrl('logo', 'full');
+
         return Inertia::render('Universities/Show', [
             'university' => $university,
             'courses' => $courses,
+            'seo' => [
+                'title' => $university->name.' - '.config('app.name'),
+                'description' => "Explore courses and class memoirs for {$university->name}.",
+                'image' => $logo !== '' ? $logo : url('/featured.webp'),
+                'type' => 'website',
+            ],
         ]);
     }
 }

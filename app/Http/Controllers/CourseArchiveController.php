@@ -12,7 +12,7 @@ class CourseArchiveController extends Controller
     public function show(Request $request, string $slug): Response
     {
         $course = Course::query()
-            ->with(['university'])
+            ->with(['university', 'university.media'])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -32,10 +32,18 @@ class CourseArchiveController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $courseImage = $course->university?->getFirstMediaUrl('logo', 'full');
+
         return Inertia::render('Courses/Show', [
             'course' => $course,
             'students' => $students,
             'search' => $search,
+            'seo' => [
+                'title' => $course->name.' - '.config('app.name'),
+                'description' => "Browse {$course->name} class memories and student profiles.",
+                'image' => $courseImage !== '' ? $courseImage : url('/featured.webp'),
+                'type' => 'website',
+            ],
         ]);
     }
 }

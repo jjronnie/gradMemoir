@@ -275,7 +275,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head :title="profile.name" />
+    <Head :title="`${profile.name} | ${$page.props.appName}`" />
 
     <PublicLayout>
         <section
@@ -322,9 +322,7 @@ onMounted(() => {
                         <p class="mt-1 text-muted-foreground">
                             @{{ profile.username }}
                         </p>
-                        <div
-                            class="mt-3 flex flex-wrap items-center gap-3 text-sm"
-                        >
+                        <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
                             <span v-if="profile.profession">{{
                                 profile.profession
                             }}</span>
@@ -335,13 +333,16 @@ onMounted(() => {
                                 <i class="fa-solid fa-location-dot" />
                                 {{ truncatedLocation }}
                             </span>
+                        </div>
+
+                        <div class="mt-2 space-y-2 text-sm text-muted-foreground">
                             <Link
                                 v-if="
                                     profile.university?.name &&
                                     profile.university?.slug
                                 "
                                 :href="`/universities/${profile.university.slug}`"
-                                class="inline-flex items-center gap-1 text-muted-foreground hover:text-muted-foreground"
+                                class="flex items-center gap-1 text-muted-foreground hover:text-muted-foreground"
                             >
                                 <img
                                     v-if="
@@ -374,15 +375,17 @@ onMounted(() => {
                                     profile.course?.slug
                                 "
                                 :href="`/courses/${profile.course.slug}`"
-                                class="text-muted-foreground hover:text-muted-foreground"
+                                class="flex items-center gap-1 text-muted-foreground hover:text-muted-foreground"
                             >
+                                <i class="fa-solid fa-graduation-cap" />
                                 {{ profile.course.short_name }} Class of
                                 {{ profile.course.year }}
                             </Link>
                             <span
                                 v-if="joinedLabel"
-                                class="text-muted-foreground"
+                                class="flex items-center gap-1 text-muted-foreground"
                             >
+                                <i class="fa-regular fa-calendar" />
                                 Joined {{ joinedLabel }}
                             </span>
                         </div>
