@@ -3,12 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
-use RyanChandler\LaravelCloudflareTurnstile\Facades\Turnstile;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -39,40 +37,19 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_turnstile_is_required_in_production(): void
+    public function test_login_is_blocked_when_honeypot_field_is_filled(): void
     {
-        $this->app['env'] = 'production';
-        $this->withoutMiddleware(ValidateCsrfToken::class);
-        Turnstile::fake();
-
         $user = User::factory()->create();
 
         $response = $this->from(route('login'))->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'password',
+            'middle_name' => 'bot-value',
         ]);
 
         $response->assertRedirect(route('login'));
-        $response->assertSessionHasErrors('cf-turnstile-response');
+        $response->assertSessionHasErrors('middle_name');
         $this->assertGuest();
-    }
-
-    public function test_users_can_authenticate_in_production_with_turnstile(): void
-    {
-        $this->app['env'] = 'production';
-        $this->withoutMiddleware(ValidateCsrfToken::class);
-        Turnstile::fake();
-
-        $user = User::factory()->create();
-
-        $response = $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-            'cf-turnstile-response' => Turnstile::dummy(),
-        ]);
-
-        $response->assertRedirect(route('dashboard', absolute: false));
-        $this->assertAuthenticatedAs($user);
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -7,44 +6,27 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
-import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
-import { Link, router } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { GraduationCap, Images, LogOut, Settings } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 type Props = {
     user: User;
 };
 
 const props = defineProps<Props>();
-const logoutModalOpen = ref(false);
-const logoutProcessing = ref(false);
+const emit = defineEmits<{
+    (event: 'request-logout'): void;
+}>();
+
 const courseHref = computed(() =>
     props.user.course_slug ? `/courses/${props.user.course_slug}` : '/dashboard',
 );
 
 const requestLogout = (): void => {
-    logoutModalOpen.value = true;
-};
-
-const confirmLogout = (): void => {
-    if (logoutProcessing.value) {
-        return;
-    }
-
-    logoutProcessing.value = true;
-
-    router.post(logout.url(), {}, {
-        onSuccess: () => {
-            router.flushAll();
-        },
-        onFinish: () => {
-            logoutProcessing.value = false;
-            logoutModalOpen.value = false;
-        },
-    });
+    emit('request-logout');
 };
 </script>
 
@@ -87,15 +69,4 @@ const confirmLogout = (): void => {
             Log out
         </button>
     </DropdownMenuItem>
-
-    <ConfirmActionModal
-        :open="logoutModalOpen"
-        title="Log out"
-        description="Are you sure you want to log out of your account?"
-        confirm-text="Log out"
-        confirm-variant="destructive"
-        :processing="logoutProcessing"
-        @update:open="logoutModalOpen = $event"
-        @confirm="confirmLogout"
-    />
 </template>

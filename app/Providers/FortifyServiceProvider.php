@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
+use App\Support\Honeypot;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,13 +52,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureAuthentication(): void
     {
         Fortify::authenticateUsing(function (Request $request): ?User {
-            if (app()->environment('production')) {
-                $request->validate([
-                    'cf-turnstile-response' => ['required', 'turnstile'],
-                ], [
-                    'cf-turnstile-response.required' => 'Turnstile verification is required.',
-                ]);
-            }
+            $request->validate(Honeypot::rules(), Honeypot::messages());
 
             $user = User::query()->where('email', $request->string('email'))->first();
 

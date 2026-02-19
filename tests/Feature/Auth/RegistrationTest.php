@@ -3,10 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use RyanChandler\LaravelCloudflareTurnstile\Facades\Turnstile;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -43,39 +41,18 @@ class RegistrationTest extends TestCase
         $this->assertFalse($user->onboarding_completed);
     }
 
-    public function test_turnstile_is_required_for_registration_in_production(): void
+    public function test_registration_is_blocked_when_honeypot_field_is_filled(): void
     {
-        $this->app['env'] = 'production';
-        $this->withoutMiddleware(ValidateCsrfToken::class);
-        Turnstile::fake();
-
         $response = $this->from(route('register'))->post(route('register.store'), [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'StrongPass123!@#',
             'password_confirmation' => 'StrongPass123!@#',
+            'middle_name' => 'bot-value',
         ]);
 
         $response->assertRedirect(route('register'));
-        $response->assertSessionHasErrors('cf-turnstile-response');
+        $response->assertSessionHasErrors('middle_name');
         $this->assertGuest();
-    }
-
-    public function test_new_users_can_register_in_production_with_turnstile(): void
-    {
-        $this->app['env'] = 'production';
-        $this->withoutMiddleware(ValidateCsrfToken::class);
-        Turnstile::fake();
-
-        $response = $this->post(route('register.store'), [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'StrongPass123!@#',
-            'password_confirmation' => 'StrongPass123!@#',
-            'cf-turnstile-response' => Turnstile::dummy(),
-        ]);
-
-        $this->assertAuthenticated();
-        $response->assertRedirect('/onboarding');
     }
 }

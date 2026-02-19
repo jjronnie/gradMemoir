@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
-import TurnstileWidget from '@/components/TurnstileWidget.vue';
-import { useTurnstile } from '@/composables/useTurnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,15 +9,12 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { redirect } from '@/routes/google';
 import { store } from '@/routes/register';
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
-const page = usePage();
 const googleProcessing = ref(false);
 const showPassword = ref(false);
 const showPasswordConfirmation = ref(false);
-const turnstileEnabled = computed(() => Boolean(page.props.turnstileEnabled));
-const turnstile = useTurnstile();
 
 const startGoogleSignIn = (): void => {
     if (googleProcessing.value) {
@@ -28,12 +23,6 @@ const startGoogleSignIn = (): void => {
 
     googleProcessing.value = true;
     window.location.assign(redirect.url());
-};
-
-const resetTurnstile = (): void => {
-    if (turnstileEnabled.value) {
-        turnstile.reset();
-    }
 };
 </script>
 
@@ -47,13 +36,6 @@ const resetTurnstile = (): void => {
         <Form
             v-bind="store.form()"
             :reset-on-success="['password', 'password_confirmation']"
-            :transform="
-                (data) => ({
-                    ...data,
-                    'cf-turnstile-response': turnstile.token.value,
-                })
-            "
-            @finish="resetTurnstile"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >
@@ -183,16 +165,22 @@ const resetTurnstile = (): void => {
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
-                <TurnstileWidget
-                    v-if="turnstileEnabled"
-                    @verified="turnstile.setToken($event)"
-                    @expired="turnstile.reset()"
-                    @widget-mounted="turnstile.setWidgetId($event)"
-                />
-                <InputError
-                    v-if="turnstileEnabled"
-                    :message="errors['cf-turnstile-response']"
-                />
+                <div class="hidden" aria-hidden="true">
+                    <Input
+                        id="middle_name_register"
+                        type="text"
+                        name="middle_name"
+                        tabindex="-1"
+                        autocomplete="off"
+                    />
+                    <Input
+                        id="referral_code_register"
+                        type="text"
+                        name="referral_code"
+                        tabindex="-1"
+                        autocomplete="off"
+                    />
+                </div>
 
                 <Button
                     type="submit"

@@ -5,7 +5,6 @@ use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\ValidateTurnstile;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,7 +26,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.status' => CheckUserStatus::class,
             'onboarding.complete' => EnsureOnboardingComplete::class,
             'role' => EnsureUserHasRole::class,
-            'turnstile' => ValidateTurnstile::class,
         ]);
 
         $middleware->web(append: [

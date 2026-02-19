@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Honeypot;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CourseApplicationStoreRequest extends FormRequest
@@ -21,7 +22,7 @@ class CourseApplicationStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
+        return [
             'applicant_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\d+$/', 'min:7', 'max:20'],
@@ -29,13 +30,8 @@ class CourseApplicationStoreRequest extends FormRequest
             'course_name' => ['required', 'string', 'max:255'],
             'year' => ['required', 'digits:4'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            ...Honeypot::rules(),
         ];
-
-        if (app()->environment('production')) {
-            $rules['cf-turnstile-response'] = ['required', 'turnstile'];
-        }
-
-        return $rules;
     }
 
     public function messages(): array
@@ -43,7 +39,7 @@ class CourseApplicationStoreRequest extends FormRequest
         return [
             'phone.regex' => 'WhatsApp phone number must contain digits only.',
             'year.digits' => 'Year must be exactly 4 digits.',
-            'cf-turnstile-response.required' => 'Turnstile verification is required.',
+            ...Honeypot::messages(),
         ];
     }
 }

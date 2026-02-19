@@ -1,19 +1,10 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
-import TurnstileWidget from '@/components/TurnstileWidget.vue';
-import { useTurnstile } from '@/composables/useTurnstile';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
-
-const page = usePage();
-const turnstileEnabled = computed(() =>
-    Boolean(page.props.turnstileEnabled),
-);
-const turnstile = useTurnstile();
+import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     applicant_name: '',
@@ -23,20 +14,12 @@ const form = useForm({
     course_name: '',
     year: '',
     notes: '',
-    'cf-turnstile-response': '',
+    middle_name: '',
+    referral_code: '',
 });
 
 const submit = (): void => {
-    form['cf-turnstile-response'] = turnstile.token.value;
-
-    form.post('/apply', {
-        onFinish: () => {
-            if (turnstileEnabled.value) {
-                turnstile.reset();
-                form['cf-turnstile-response'] = '';
-            }
-        },
-    });
+    form.post('/apply');
 };
 </script>
 
@@ -124,16 +107,24 @@ const submit = (): void => {
                     <InputError :message="form.errors.notes" />
                 </div>
 
-                <TurnstileWidget
-                    v-if="turnstileEnabled"
-                    @verified="turnstile.setToken($event)"
-                    @expired="turnstile.reset()"
-                    @widget-mounted="turnstile.setWidgetId($event)"
-                />
-                <InputError
-                    v-if="turnstileEnabled"
-                    :message="form.errors['cf-turnstile-response']"
-                />
+                <div class="hidden" aria-hidden="true">
+                    <Input
+                        id="middle_name_apply"
+                        v-model="form.middle_name"
+                        type="text"
+                        name="middle_name"
+                        tabindex="-1"
+                        autocomplete="off"
+                    />
+                    <Input
+                        id="referral_code_apply"
+                        v-model="form.referral_code"
+                        type="text"
+                        name="referral_code"
+                        tabindex="-1"
+                        autocomplete="off"
+                    />
+                </div>
 
                 <LoadingButton
                     type="submit"

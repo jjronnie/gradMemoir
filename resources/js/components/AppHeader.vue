@@ -2,6 +2,7 @@
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,10 +20,11 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
+import { logout } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { Menu } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -42,6 +44,8 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
+const logoutModalOpen = ref(false);
+const logoutProcessing = ref(false);
 
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
@@ -116,6 +120,28 @@ const mobileLinks = computed<NavLink[]>(() => [
         visible: true,
     },
 ]);
+
+const requestLogout = (): void => {
+    logoutModalOpen.value = true;
+};
+
+const confirmLogout = (): void => {
+    if (logoutProcessing.value) {
+        return;
+    }
+
+    logoutProcessing.value = true;
+
+    router.post(logout.url(), {}, {
+        onSuccess: () => {
+            router.flushAll();
+        },
+        onFinish: () => {
+            logoutProcessing.value = false;
+            logoutModalOpen.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -206,7 +232,10 @@ const mobileLinks = computed<NavLink[]>(() => [
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
-                            <UserMenuContent :user="auth.user" />
+                            <UserMenuContent
+                                :user="auth.user"
+                                @request-logout="requestLogout"
+                            />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -223,5 +252,16 @@ const mobileLinks = computed<NavLink[]>(() => [
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </div>
         </div>
+
+        <ConfirmActionModal
+            :open="logoutModalOpen"
+            title="Log out"
+            description="Are you sure you want to log out of your account?"
+            confirm-text="Log out"
+            confirm-variant="destructive"
+            :processing="logoutProcessing"
+            @update:open="logoutModalOpen = $event"
+            @confirm="confirmLogout"
+        />
     </div>
 </template>

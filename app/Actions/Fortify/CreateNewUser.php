@@ -6,6 +6,7 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\Honeypot;
 use App\Support\UsernameGenerator;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -24,15 +25,10 @@ class CreateNewUser implements CreatesNewUsers
         $rules = [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            ...Honeypot::rules(),
         ];
 
-        if (app()->environment('production')) {
-            $rules['cf-turnstile-response'] = ['required', 'turnstile'];
-        }
-
-        Validator::make($input, $rules, [
-            'cf-turnstile-response.required' => 'Turnstile verification is required.',
-        ])->validate();
+        Validator::make($input, $rules, Honeypot::messages())->validate();
 
         return User::create([
             'name' => $input['name'],

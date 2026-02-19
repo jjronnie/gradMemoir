@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLogo from '@/components/AppLogo.vue';
 import BottomNav from '@/components/BottomNav.vue';
+import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,9 +13,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getInitials } from '@/composables/useInitials';
 import { useAppearance } from '@/composables/useAppearance';
+import { logout } from '@/routes';
 import type { AppPageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 const page = usePage<AppPageProps>();
@@ -26,9 +28,33 @@ const appName = computed(
 );
 const currentYear = new Date().getFullYear();
 const authUser = computed(() => page.props.auth.user);
+const logoutModalOpen = ref(false);
+const logoutProcessing = ref(false);
 
 const toggleTheme = (): void => {
     updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
+};
+
+const requestLogout = (): void => {
+    logoutModalOpen.value = true;
+};
+
+const confirmLogout = (): void => {
+    if (logoutProcessing.value) {
+        return;
+    }
+
+    logoutProcessing.value = true;
+
+    router.post(logout.url(), {}, {
+        onSuccess: () => {
+            router.flushAll();
+        },
+        onFinish: () => {
+            logoutProcessing.value = false;
+            logoutModalOpen.value = false;
+        },
+    });
 };
 </script>
 
@@ -112,7 +138,10 @@ const toggleTheme = (): void => {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
-                            <UserMenuContent :user="authUser" />
+                            <UserMenuContent
+                                :user="authUser"
+                                @request-logout="requestLogout"
+                            />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -203,6 +232,17 @@ const toggleTheme = (): void => {
                 </div>
             </div>
         </footer>
+
+        <ConfirmActionModal
+            :open="logoutModalOpen"
+            title="Log out"
+            description="Are you sure you want to log out of your account?"
+            confirm-text="Log out"
+            confirm-variant="destructive"
+            :processing="logoutProcessing"
+            @update:open="logoutModalOpen = $event"
+            @confirm="confirmLogout"
+        />
 
         <BottomNav />
     </div>

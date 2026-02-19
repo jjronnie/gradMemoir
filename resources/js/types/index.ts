@@ -12,8 +12,6 @@ export type AppPageProps<
     appName: string;
     auth: Auth;
     sidebarOpen: boolean;
-    turnstileEnabled?: boolean;
-    turnstileSiteKey?: string;
     flash?: {
         success?: string | null;
         error?: string | null;
