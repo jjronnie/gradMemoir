@@ -26,18 +26,48 @@ const emit = defineEmits<{
 const page = usePage();
 const pending = ref(false);
 const available = ref<boolean | null>(null);
+const usernamePattern = /^[a-z0-9_]+$/;
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 const usernameError = computed(() => {
     return (page.props.errors?.[props.name] as string | undefined) ?? null;
 });
 
+const sanitizeUsername = (value: string): string => {
+    return value
+        .replace(/^@+/, '')
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 30);
+};
+
+const validateUsername = (value: string): string | null => {
+    if (value === '') {
+        return null;
+    }
+
+    if (value.length < 3) {
+        return 'Username must be at least 3 characters.';
+    }
+
+    if (!usernamePattern.test(value)) {
+        return 'Username may only contain lowercase letters, numbers, and underscores.';
+    }
+
+    return null;
+};
+
+const inlineError = computed(() => validateUsername(props.modelValue));
+
 const check = async (value: string): Promise<void> => {
     if (!props.checkAvailability) {
         return;
     }
 
-    if (value.length < 3) {
+    if (validateUsername(value) !== null) {
         available.value = null;
         emit('availability', null);
 
@@ -78,6 +108,14 @@ const check = async (value: string): Promise<void> => {
 watch(
     () => props.modelValue,
     (value) => {
+        const sanitized = sanitizeUsername(value);
+
+        if (sanitized !== value) {
+            emit('update:modelValue', sanitized);
+
+            return;
+        }
+
         if (timeoutId !== null) {
             clearTimeout(timeoutId);
         }
@@ -93,6 +131,10 @@ onBeforeUnmount(() => {
         clearTimeout(timeoutId);
     }
 });
+
+const onUsernameInput = (value: string): void => {
+    emit('update:modelValue', sanitizeUsername(value));
+};
 </script>
 
 <template>
@@ -107,11 +149,12 @@ onBeforeUnmount(() => {
                 :model-value="modelValue"
                 class="pl-7"
                 placeholder="username"
-                @update:model-value="emit('update:modelValue', ($event as string).replace(/^@/, ''))"
+                @update:model-value="onUsernameInput($event as string)"
             />
         </div>
         <div class="text-xs text-muted-foreground" v-if="checkAvailability">
-            <span v-if="pending">Checking availability...</span>
+            <span v-if="inlineError" class="text-destructive">{{ inlineError }}</span>
+            <span v-else-if="pending">Checking availability...</span>
             <span v-else-if="available === true" class="text-green-600"
                 >Username is available.</span
             >

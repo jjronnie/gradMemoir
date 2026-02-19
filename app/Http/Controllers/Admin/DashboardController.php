@@ -27,8 +27,8 @@ class DashboardController extends Controller
         $recentUsers = User::query()
             ->latest()
             ->limit(5)
-            ->with(['university', 'course'])
-            ->get(['id', 'name', 'email', 'username', 'role', 'status', 'created_at', 'university_id', 'course_id']);
+            ->with(['university', 'course', 'courseYear'])
+            ->get(['id', 'name', 'email', 'username', 'role', 'status', 'created_at', 'university_id', 'course_id', 'course_year_id']);
 
         $postBreakdown = [
             'published' => Post::query()->where('published', true)->count(),

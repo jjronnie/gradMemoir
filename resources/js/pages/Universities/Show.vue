@@ -53,12 +53,12 @@ defineProps<{
             <Link
                 v-for="course in courses"
                 :key="course.id"
-                :href="`/courses/${course.slug}`"
+                :href="`/course/${course.route_slug}`"
                 class="rounded-xl border border-border bg-card p-4 hover:border-primary"
             >
                 <p class="font-semibold">{{ course.name }}</p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    {{ course.short_name }} · Class of {{ course.year }}
+                    {{ course.short_name }}
                 </p>
                 <p
                     v-if="course.nickname"
@@ -67,7 +67,8 @@ defineProps<{
                     AKA: {{ course.nickname }}
                 </p>
                 <p class="mt-2 text-xs text-muted-foreground">
-                    {{ course.active_students_count ?? 0 }} students
+                    {{ course.cohorts_count ?? 0 }} cohorts ·
+                    {{ course.active_students_count ?? 0 }} active students
                 </p>
             </Link>
         </section>

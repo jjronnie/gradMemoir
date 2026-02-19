@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\OnboardingCompleteRequest;
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Models\University;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,8 @@ class OnboardingController extends Controller
 
         $search = trim((string) $request->string('search'));
         $selectedUniversityId = $request->integer('university_id') ?: null;
+        $selectedCourseId = $request->integer('course_id') ?: null;
+        $selectedCourseYearId = $request->integer('course_year_id') ?: null;
 
         $universities = University::query()
             ->with('media')
@@ -46,11 +49,27 @@ class OnboardingController extends Controller
                 ->orderBy('name')
                 ->get();
 
+        $courseYears = $selectedCourseId === null
+            ? collect()
+            : CourseYear::query()
+                ->select(['id', 'year', 'slug', 'course_id'])
+                ->where('course_id', $selectedCourseId)
+                ->when($selectedUniversityId !== null, function ($query) use ($selectedUniversityId): void {
+                    $query->whereHas('course', function ($courseQuery) use ($selectedUniversityId): void {
+                        $courseQuery->where('university_id', $selectedUniversityId);
+                    });
+                })
+                ->orderByDesc('year')
+                ->get();
+
         return Inertia::render('Onboarding/Index', [
             'universities' => $universities,
             'courses' => $courses,
+            'courseYears' => $courseYears,
             'search' => $search,
             'selectedUniversityId' => $selectedUniversityId,
+            'selectedCourseId' => $selectedCourseId,
+            'selectedCourseYearId' => $selectedCourseYearId,
         ]);
     }
 
@@ -70,10 +89,23 @@ class OnboardingController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $user, $validated): void {
+        $courseYear = CourseYear::query()
+            ->whereKey($validated['course_year_id'])
+            ->where('course_id', $course->id)
+            ->first();
+
+        if ($courseYear === null) {
+            throw ValidationException::withMessages([
+                'course_year_id' => 'Selected cohort does not belong to the selected program.',
+            ]);
+        }
+
+        DB::transaction(function () use ($request, $user, $validated, $course, $courseYear): void {
+
             $user->forceFill([
                 'university_id' => $validated['university_id'],
-                'course_id' => $validated['course_id'],
+                'course_id' => $course->id,
+                'course_year_id' => $courseYear->id,
                 'username' => $validated['username'],
                 'username_updated_at' => now(),
                 'onboarding_completed' => true,
@@ -91,7 +123,7 @@ class OnboardingController extends Controller
 
         return redirect()->route('dashboard')->with(
             'success',
-            'Onboarding completed. You can now complete your profile and add your 12 memories.'
+            'Onboarding completed. You can now complete your profile and add your memories.'
         );
     }
 }

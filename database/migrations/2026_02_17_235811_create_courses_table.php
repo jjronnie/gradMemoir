@@ -17,12 +17,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('short_name');
             $table->string('nickname')->nullable();
-            $table->string('year', 4);
-            $table->string('slug')->unique();
             $table->string('shortcode', 16)->unique();
-            $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
+
+            $table->unique(['university_id', 'short_name']);
         });
     }
 

@@ -82,7 +82,7 @@ const superadminItems = computed<NavItem[]>(() => [
 ]);
 
 const studentOrAdminItems = computed<NavItem[]>(() => {
-    const courseSlug = (user.value?.course_slug as string | undefined) ?? '';
+    const courseYearUrl = (user.value?.course_year_url as string | undefined) ?? '';
     const profileUrl = (user.value?.profile_url as string | undefined) ?? '#';
 
     return [
@@ -97,10 +97,10 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
         {
             label: 'My Course',
             type: 'link',
-            href: courseSlug !== '' ? `/courses/${courseSlug}` : '/dashboard',
+            href: courseYearUrl !== '' ? courseYearUrl : '/dashboard',
             iconClass: 'fa-solid fa-graduation-cap',
             visible: true,
-            active: currentUrl.value.startsWith('/courses/'),
+            active: currentUrl.value.startsWith('/course/'),
         },
         {
             label: 'Add Photo',
@@ -124,8 +124,16 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
             type: 'link',
             href: '/more',
             iconClass: 'fa-solid fa-ellipsis',
-            visible: true,
+            visible: !(user.value?.roles?.includes('admin') ?? false),
             active: currentUrl.value.startsWith('/more'),
+        },
+        {
+            label: 'Manage',
+            type: 'link',
+            href: '/course-admin',
+            iconClass: 'fa-solid fa-users',
+            visible: user.value?.roles?.includes('admin') ?? false,
+            active: currentUrl.value.startsWith('/course-admin'),
         },
     ];
 });

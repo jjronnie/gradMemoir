@@ -46,4 +46,23 @@ class UsernameAvailabilityTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_username_availability_check_normalizes_input_before_lookup(): void
+    {
+        $user = User::factory()->create();
+        User::factory()->create([
+            'username' => 'john_doe',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->postJson(route('api.username.check'), [
+                'username' => '@John   Doe!!',
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.username', 'john_doe')
+            ->assertJsonPath('data.available', false);
+    }
 }

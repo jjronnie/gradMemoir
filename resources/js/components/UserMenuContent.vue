@@ -22,7 +22,7 @@ const emit = defineEmits<{
 }>();
 
 const courseHref = computed(() =>
-    props.user.course_slug ? `/courses/${props.user.course_slug}` : '/dashboard',
+    props.user.course_year_url ? props.user.course_year_url : '/dashboard',
 );
 
 const requestLogout = (): void => {

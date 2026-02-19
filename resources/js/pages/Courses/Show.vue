@@ -2,7 +2,7 @@
 import ShareButton from '@/components/ShareButton.vue';
 import { Input } from '@/components/ui/input';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import type { Course } from '@/types';
+import type { CourseYear } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
@@ -25,18 +25,40 @@ type Paginated<T> = {
 };
 
 const props = defineProps<{
-    course: Course & { university: { name: string } };
+    courseYear: CourseYear & {
+        course: {
+            id: number;
+            name: string;
+            short_name: string;
+            nickname?: string | null;
+            university?: { name: string };
+        };
+    };
     students: Paginated<StudentCard>;
     search: string;
 }>();
+
 const currentUrl = ref('');
 const searchTerm = ref(props.search);
 const isSearchOpen = ref(props.search.trim() !== '');
 const classHeading = computed(
-    () => `${props.course.short_name.toUpperCase()} Class of ${props.course.year}`,
+    () => `${props.courseYear.course.short_name.toUpperCase()} Class of ${props.courseYear.year}`,
 );
-const searchInputId = `course-student-search-${props.course.id}`;
+const searchInputId = `course-student-search-${props.courseYear.id}`;
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+const studentPhotoUrl = (student: StudentCard): string | null => {
+    const url = student.media?.[0]?.conversions?.full
+        ?? student.media?.[0]?.conversions?.thumb
+        ?? student.media?.[0]?.original_url
+        ?? null;
+
+    if (url === null || url.trim() === '') {
+        return null;
+    }
+
+    return url;
+};
 
 const onSearch = (): void => {
     if (timeoutId !== null) {
@@ -45,7 +67,7 @@ const onSearch = (): void => {
 
     timeoutId = setTimeout(() => {
         router.get(
-            `/courses/${props.course.slug}`,
+            `/${props.courseYear.slug}`,
             { search: searchTerm.value },
             {
                 preserveScroll: true,
@@ -70,7 +92,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head :title="`${course.name} - ${$page.props.appName}`" />
+    <Head :title="`${courseYear.course.name} - ${$page.props.appName}`" />
 
     <PublicLayout>
         <section class="py-10">
@@ -90,16 +112,16 @@ onMounted(() => {
             <div
                 class="mx-auto mt-6 grid w-[90%] grid-cols-1 gap-2 text-center text-sm text-muted-foreground md:grid-cols-3"
             >
-                <p class="font-medium">{{ course.university?.name }}</p>
-                <p class="font-medium">{{ course.name }}</p>
-                <p class="font-medium">{{ course.year }}</p>
+                <p class="font-medium">{{ courseYear.course.university?.name }}</p>
+                <p class="font-medium">{{ courseYear.course.name }}</p>
+                <p class="font-medium">{{ courseYear.year }}</p>
             </div>
 
             <p
-                v-if="course.nickname"
+                v-if="courseYear.course.nickname"
                 class="mt-4 text-center text-sm text-muted-foreground"
             >
-                AKA: {{ course.nickname }}
+                AKA: {{ courseYear.course.nickname }}
             </p>
             <div class="mx-auto mt-5 flex w-[90%] items-center gap-3">
                 <button
@@ -131,16 +153,18 @@ onMounted(() => {
             >
                 <div class="overflow-hidden border border-border bg-card">
                     <img
-                        :src="
-                            student.media?.[0]?.conversions?.full ??
-                            student.media?.[0]?.conversions?.thumb ??
-                            student.media?.[0]?.original_url ??
-                            ''
-                        "
+                        v-if="studentPhotoUrl(student)"
+                        :src="studentPhotoUrl(student) ?? ''"
                         :alt="student.name"
                         class="aspect-[3/4] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                         loading="lazy"
                     />
+                    <div
+                        v-else
+                        class="flex aspect-[3/4] w-full items-center justify-center bg-muted text-muted-foreground"
+                    >
+                        <i class="fa-solid fa-user text-4xl" />
+                    </div>
                 </div>
                 <p class="mt-3 truncate text-center text-sm font-semibold uppercase">
                     {{ student.name }}
@@ -173,7 +197,7 @@ onMounted(() => {
 
         <ShareButton
             :url="currentUrl"
-            :title="`${course.name} - ${$page.props.appName}`"
+            :title="`${courseYear.course.name} Class of ${courseYear.year} - ${$page.props.appName}`"
         />
     </PublicLayout>
 </template>

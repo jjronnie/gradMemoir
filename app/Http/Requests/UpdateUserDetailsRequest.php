@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Support\UsernameGenerator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -41,6 +42,7 @@ class UpdateUserDetailsRequest extends FormRequest
             'email_verified_at' => ['nullable', 'date'],
             'university_id' => ['nullable', 'integer', 'exists:universities,id'],
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
+            'course_year_id' => ['nullable', 'integer', 'exists:course_years,id'],
         ];
     }
 
@@ -83,6 +85,13 @@ class UpdateUserDetailsRequest extends FormRequest
                 'course_id' => $courseId === '' ? null : (int) $courseId,
             ]);
         }
+
+        if ($this->has('course_year_id')) {
+            $courseYearId = trim((string) $this->input('course_year_id'));
+            $this->merge([
+                'course_year_id' => $courseYearId === '' ? null : (int) $courseYearId,
+            ]);
+        }
     }
 
     public function withValidator(Validator $validator): void
@@ -90,18 +99,45 @@ class UpdateUserDetailsRequest extends FormRequest
         $validator->after(function (Validator $validator): void {
             $universityId = $this->input('university_id');
             $courseId = $this->input('course_id');
+            $courseYearId = $this->input('course_year_id');
 
-            if ($universityId === null || $courseId === null || $universityId === '' || $courseId === '') {
+            if ($courseId !== null && $courseId !== '' && $universityId !== null && $universityId !== '') {
+                $courseBelongsToUniversity = Course::query()
+                    ->whereKey($courseId)
+                    ->where('university_id', $universityId)
+                    ->exists();
+
+                if (! $courseBelongsToUniversity) {
+                    $validator->errors()->add('course_id', 'Selected course does not belong to the selected university.');
+                }
+            }
+
+            if ($courseYearId === null || $courseYearId === '') {
+                if ($courseId !== null && $courseId !== '') {
+                    $validator->errors()->add('course_year_id', 'Please select a cohort for the selected course.');
+                }
+
                 return;
             }
 
-            $courseBelongsToUniversity = Course::query()
-                ->whereKey($courseId)
-                ->where('university_id', $universityId)
-                ->exists();
+            $courseYear = CourseYear::query()
+                ->with('course:id,university_id')
+                ->find($courseYearId);
 
-            if (! $courseBelongsToUniversity) {
-                $validator->errors()->add('course_id', 'Selected course does not belong to the selected university.');
+            if ($courseYear === null) {
+                return;
+            }
+
+            if ($courseId !== null && $courseId !== '' && (int) $courseId !== (int) $courseYear->course_id) {
+                $validator->errors()->add('course_year_id', 'Selected cohort does not belong to the selected course.');
+            }
+
+            if (
+                $universityId !== null
+                && $universityId !== ''
+                && (int) $universityId !== (int) $courseYear->course?->university_id
+            ) {
+                $validator->errors()->add('course_year_id', 'Selected cohort does not belong to the selected university.');
             }
         });
     }

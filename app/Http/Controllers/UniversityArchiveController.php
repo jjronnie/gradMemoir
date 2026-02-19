@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\University;
+use App\Support\CourseYearSlugGenerator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,12 +37,19 @@ class UniversityArchiveController extends Controller
             ->firstOrFail();
 
         $courses = $university->courses()
-            ->withCount(['students as active_students_count' => function ($query): void {
-                $query->where('status', 'active');
-            }])
-            ->orderBy('year', 'desc')
+            ->withCount([
+                'students as active_students_count' => function ($query): void {
+                    $query->where('status', 'active');
+                },
+                'courseYears as cohorts_count',
+            ])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($course) {
+                $course->route_slug = CourseYearSlugGenerator::sanitizeShortName((string) $course->short_name);
+
+                return $course;
+            });
 
         $logo = $university->getFirstMediaUrl('logo', 'full');
 
@@ -50,7 +58,7 @@ class UniversityArchiveController extends Controller
             'courses' => $courses,
             'seo' => [
                 'title' => $university->name.' - '.config('app.name'),
-                'description' => "Explore courses and class memoirs for {$university->name}.",
+                'description' => "Explore programs and cohorts for {$university->name}.",
                 'image' => $logo !== '' ? $logo : url('/featured.webp'),
                 'type' => 'website',
             ],

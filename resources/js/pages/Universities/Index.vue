@@ -58,7 +58,7 @@ defineProps<{
                     {{ university.location }}
                 </p>
                 <p class="mt-2 text-xs text-muted-foreground">
-                    {{ university.courses_count ?? 0 }} courses
+                    {{ university.courses_count ?? 0 }} programs
                 </p>
             </Link>
         </section>

@@ -54,6 +54,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'onboarding_completed',
         'university_id',
         'course_id',
+        'course_year_id',
     ];
 
     /**
@@ -112,6 +113,11 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function courseYear(): BelongsTo
+    {
+        return $this->belongsTo(CourseYear::class, 'course_year_id');
     }
 
     public function posts(): HasMany

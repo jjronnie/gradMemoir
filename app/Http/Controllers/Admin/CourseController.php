@@ -19,13 +19,14 @@ class CourseController extends Controller
         $search = trim((string) request()->string('search'));
 
         $courses = Course::query()
-            ->with(['university', 'admin'])
+            ->with(['university'])
+            ->withCount('courseYears')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($innerQuery) use ($search): void {
                     $innerQuery
                         ->where('name', 'like', "%{$search}%")
                         ->orWhere('short_name', 'like', "%{$search}%")
-                        ->orWhere('slug', 'like', "%{$search}%");
+                        ->orWhere('shortcode', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -42,7 +43,6 @@ class CourseController extends Controller
     {
         return Inertia::render('Admin/Courses/Create', [
             'universities' => University::query()->orderBy('name')->get(['id', 'name']),
-            'admins' => User::query()->where('role', 'admin')->orderBy('name')->get(['id', 'name', 'email']),
         ]);
     }
 
@@ -53,12 +53,17 @@ class CourseController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('admin.courses.index')->with('success', 'Course created.');
+        return redirect()->route('admin.courses.index')->with('success', 'Program created.');
     }
 
     public function edit(Course $course): Response
     {
-        $course->load(['university', 'admin']);
+        $course->load([
+            'university',
+            'courseYears' => function ($query): void {
+                $query->with('admin')->orderByDesc('year');
+            },
+        ]);
 
         return Inertia::render('Admin/Courses/Edit', [
             'course' => $course,
@@ -71,13 +76,13 @@ class CourseController extends Controller
     {
         $course->update($request->validated());
 
-        return redirect()->route('admin.courses.index')->with('success', 'Course updated.');
+        return redirect()->route('admin.courses.index')->with('success', 'Program updated.');
     }
 
     public function destroy(Course $course): RedirectResponse
     {
         $course->delete();
 
-        return redirect()->route('admin.courses.index')->with('success', 'Course deleted.');
+        return redirect()->route('admin.courses.index')->with('success', 'Program deleted.');
     }
 }

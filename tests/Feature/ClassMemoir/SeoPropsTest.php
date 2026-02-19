@@ -3,6 +3,7 @@
 namespace Tests\Feature\ClassMemoir;
 
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,7 +51,7 @@ class SeoPropsTest extends TestCase
             );
     }
 
-    public function test_course_and_university_pages_contain_expected_seo_title_patterns(): void
+    public function test_course_year_and_university_pages_contain_expected_seo_title_patterns(): void
     {
         $superadmin = User::factory()->superadmin()->create();
         $university = University::factory()->create([
@@ -60,15 +61,26 @@ class SeoPropsTest extends TestCase
         ]);
         $course = Course::factory()->create([
             'name' => 'BSc Computer Science',
-            'slug' => 'bsc-computer-science',
+            'short_name' => 'CSC',
             'university_id' => $university->id,
             'created_by' => $superadmin->id,
         ]);
+        CourseYear::factory()->create([
+            'course_id' => $course->id,
+            'year' => '2026',
+        ]);
 
-        $this->get('/courses/'.$course->slug)
+        $this->get('/course/csc-class-of-2026')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Courses/Show')
+                ->where('seo.title', 'BSc Computer Science Class of 2026 - '.config('app.name'))
+            );
+
+        $this->get('/course/csc')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Courses/Overview')
                 ->where('seo.title', 'BSc Computer Science - '.config('app.name'))
             );
 

@@ -11,7 +11,9 @@ export type User = {
     onboarding_completed: boolean;
     university_id: number | null;
     course_id: number | null;
-    course_slug?: string | null;
+    course_year_id: number | null;
+    course_year_slug?: string | null;
+    course_year_url?: string | null;
     profile_url?: string | null;
     photo_count?: number | null;
     photo_limit?: number | null;

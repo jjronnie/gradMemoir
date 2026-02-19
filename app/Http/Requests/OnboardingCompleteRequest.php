@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\CourseYear;
 use App\Support\UsernameGenerator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class OnboardingCompleteRequest extends FormRequest
 {
@@ -26,6 +28,7 @@ class OnboardingCompleteRequest extends FormRequest
         return [
             'university_id' => ['required', 'integer', 'exists:universities,id'],
             'course_id' => ['required', 'integer', 'exists:courses,id'],
+            'course_year_id' => ['required', 'integer', 'exists:course_years,id'],
             'username' => [
                 'required',
                 'string',
@@ -44,6 +47,27 @@ class OnboardingCompleteRequest extends FormRequest
             'username.regex' => 'Username may only contain lowercase letters, numbers, and underscores.',
             'avatar.max' => 'Profile photo must be 20MB or smaller.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $courseId = $this->integer('course_id');
+            $courseYearId = $this->integer('course_year_id');
+
+            if ($courseId === 0 || $courseYearId === 0) {
+                return;
+            }
+
+            $belongsToCourse = CourseYear::query()
+                ->whereKey($courseYearId)
+                ->where('course_id', $courseId)
+                ->exists();
+
+            if (! $belongsToCourse) {
+                $validator->errors()->add('course_year_id', 'Selected cohort does not belong to the selected program.');
+            }
+        });
     }
 
     protected function prepareForValidation(): void

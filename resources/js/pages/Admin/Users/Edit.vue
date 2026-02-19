@@ -20,8 +20,10 @@ type UserPayload = {
     status: 'active' | 'suspended' | 'banned';
     university?: { name?: string | null } | null;
     course?: { name?: string | null } | null;
+    course_year?: { year?: string | null } | null;
     university_id?: number | null;
     course_id?: number | null;
+    course_year_id?: number | null;
 };
 
 type UniversityOption = {
@@ -33,8 +35,14 @@ type CourseOption = {
     id: number;
     name: string;
     short_name: string;
-    year: string;
     university_id: number;
+};
+
+type CourseYearOption = {
+    id: number;
+    course_id: number;
+    year: string;
+    slug: string;
 };
 
 const props = defineProps<{
@@ -42,6 +50,7 @@ const props = defineProps<{
     currentUserId?: number | null;
     universities: UniversityOption[];
     courses: CourseOption[];
+    courseYears: CourseYearOption[];
 }>();
 
 const detailsForm = useForm({
@@ -55,6 +64,7 @@ const detailsForm = useForm({
         : '',
     university_id: props.user.university_id ?? null,
     course_id: props.user.course_id ?? null,
+    course_year_id: props.user.course_year_id ?? null,
 });
 
 const statusForm = useForm({
@@ -79,6 +89,16 @@ const filteredCourses = computed(() => {
     );
 });
 
+const filteredCourseYears = computed(() => {
+    if (detailsForm.course_id === null) {
+        return [];
+    }
+
+    return props.courseYears.filter(
+        (courseYear) => courseYear.course_id === detailsForm.course_id,
+    );
+});
+
 watch(
     () => detailsForm.university_id,
     () => {
@@ -87,6 +107,19 @@ watch(
             !filteredCourses.value.some((course) => course.id === detailsForm.course_id)
         ) {
             detailsForm.course_id = null;
+            detailsForm.course_year_id = null;
+        }
+    },
+);
+
+watch(
+    () => detailsForm.course_id,
+    () => {
+        if (
+            detailsForm.course_year_id !== null &&
+            !filteredCourseYears.value.some((courseYear) => courseYear.id === detailsForm.course_year_id)
+        ) {
+            detailsForm.course_year_id = null;
         }
     },
 );
@@ -143,6 +176,14 @@ const saveRole = (): void => {
                 <p>
                     <span class="text-muted-foreground">Course:</span>
                     {{ user.course?.name ?? 'Not set' }}
+                </p>
+                <p>
+                    <span class="text-muted-foreground">Cohort:</span>
+                    {{
+                        user.course_year?.year
+                            ? `Class of ${user.course_year.year}`
+                            : 'Not set'
+                    }}
                 </p>
                 <p>
                     <span class="text-muted-foreground">Public profile:</span>
@@ -215,12 +256,29 @@ const saveRole = (): void => {
                                     :key="course.id"
                                     :value="course.id"
                                 >
-                                    {{ course.short_name }} Class of
-                                    {{ course.year }}
+                                    {{ course.short_name }}
                                 </option>
                             </select>
                             <InputError :message="detailsForm.errors.course_id" />
                         </div>
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="course_year_id">Cohort</Label>
+                        <select
+                            id="course_year_id"
+                            v-model="detailsForm.course_year_id"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option :value="null">Not set</option>
+                            <option
+                                v-for="courseYear in filteredCourseYears"
+                                :key="courseYear.id"
+                                :value="courseYear.id"
+                            >
+                                Class of {{ courseYear.year }}
+                            </option>
+                        </select>
+                        <InputError :message="detailsForm.errors.course_year_id" />
                     </div>
                     <label class="flex items-center gap-2 text-xs">
                         <input

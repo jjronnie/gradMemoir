@@ -18,11 +18,22 @@ export type Course = {
     name: string;
     short_name: string;
     nickname?: string | null;
-    year: string;
-    slug: string;
     shortcode: string;
     university_id: number;
     university?: University;
+    active_students_count?: number;
+    cohorts_count?: number;
+    route_slug?: string;
+    [key: string]: unknown;
+};
+
+export type CourseYear = {
+    id: number;
+    course_id: number;
+    year: string;
+    slug: string;
+    admin_id?: number | null;
+    course?: Course;
     active_students_count?: number;
     [key: string]: unknown;
 };

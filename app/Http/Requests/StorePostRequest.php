@@ -49,14 +49,14 @@ class StorePostRequest extends FormRequest
                 ->where('model_type', Post::class)
                 ->whereIn('model_id', $this->user()->posts()->select('id'))
                 ->count();
-            $maxPhotos = 12;
+            $maxPhotos = 8;
 
             if ($body === '' && ! $hasPhotos) {
                 $validator->errors()->add('body', 'Post body or at least one photo is required.');
             }
 
             if ($currentPhotoCount >= $maxPhotos) {
-                $validator->errors()->add('photos', 'You have reached the maximum of 12 photos. Delete a photo before adding a new one.');
+                $validator->errors()->add('photos', 'You have reached the maximum of 8 photos. Delete a photo before adding a new one.');
             }
 
             if ($currentPhotoCount + $requestedPhotoCount > $maxPhotos) {

@@ -20,17 +20,13 @@ class CourseFactory extends Factory
     public function definition(): array
     {
         $shortName = Str::upper(fake()->lexify('??'));
-        $year = (string) fake()->numberBetween(1990, 2030);
 
         return [
             'university_id' => University::factory(),
             'name' => fake()->words(3, true),
             'short_name' => $shortName,
             'nickname' => null,
-            'year' => $year,
-            'slug' => Str::slug("{$shortName}-class-of-{$year}"),
             'shortcode' => Str::lower(Str::random(8)),
-            'admin_id' => User::factory()->admin(),
             'created_by' => User::factory()->superadmin(),
         ];
     }

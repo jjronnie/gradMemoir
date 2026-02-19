@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Course;
+use App\Models\CourseYear;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -11,15 +11,17 @@ class CourseAdminController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $course = Course::query()
-            ->with(['university'])
+        $courseYear = CourseYear::query()
+            ->with(['course.university'])
             ->where('admin_id', $request->user()->id)
             ->firstOrFail();
 
+        $this->authorize('manageMembers', $courseYear);
+
         $search = trim((string) $request->string('search'));
 
-        $members = $course->students()
-            ->with(['university', 'course', 'media'])
+        $members = $courseYear->users()
+            ->with(['university', 'course', 'courseYear', 'media'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($innerQuery) use ($search): void {
                     $innerQuery
@@ -33,7 +35,7 @@ class CourseAdminController extends Controller
             ->withQueryString();
 
         return Inertia::render('CourseAdmin/Index', [
-            'course' => $course,
+            'courseYear' => $courseYear,
             'members' => $members,
             'search' => $search,
         ]);

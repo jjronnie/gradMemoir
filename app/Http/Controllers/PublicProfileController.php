@@ -16,7 +16,8 @@ class PublicProfileController extends Controller
                 'media',
                 'university:id,name,slug',
                 'university.media',
-                'course:id,name,short_name,year,slug',
+                'courseYear:id,course_id,year,slug',
+                'courseYear.course:id,name,short_name',
             ])
             ->firstOrFail();
 
@@ -30,8 +31,20 @@ class PublicProfileController extends Controller
         $profileImage = $user->getFirstMediaUrl('avatar', 'full');
         $fallbackDescription = "View {$user->name}'s class memoir profile and published memories.";
 
+        $profile = [
+            ...$user->toArray(),
+            'course' => $user->courseYear === null || $user->courseYear->course === null
+                ? null
+                : [
+                    'name' => $user->courseYear->course->name,
+                    'short_name' => $user->courseYear->course->short_name,
+                    'year' => $user->courseYear->year,
+                    'slug' => $user->courseYear->slug,
+                ],
+        ];
+
         return Inertia::render('Profiles/Show', [
-            'profile' => $user,
+            'profile' => $profile,
             'posts' => $posts,
             'seo' => [
                 'title' => $user->name.' | '.config('app.name'),

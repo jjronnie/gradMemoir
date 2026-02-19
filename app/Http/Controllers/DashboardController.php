@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Models\CourseYear;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -19,7 +20,14 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        $user->load(['course.university', 'university']);
+        $user->load(['courseYear.course.university', 'university']);
+
+        $managedCourseYear = $user->role?->value === 'admin'
+            ? CourseYear::query()
+                ->where('admin_id', $user->id)
+                ->with('course')
+                ->first()
+            : null;
 
         $recentPosts = Post::query()
             ->whereBelongsTo($user)
@@ -30,13 +38,11 @@ class DashboardController extends Controller
             ->where('model_type', Post::class)
             ->whereIn('model_id', $user->posts()->select('id'))
             ->count();
-        $photoLimit = 12;
+        $photoLimit = 8;
 
         return Inertia::render('Dashboard', [
             'recentPosts' => $recentPosts,
-            'managedCourse' => $user->role?->value === 'admin'
-                ? $user->course?->only(['id', 'name', 'slug', 'shortcode'])
-                : null,
+            'managedCourseYear' => $managedCourseYear?->only(['id', 'year', 'slug', 'course_id']),
             'myUniversity' => $user->university?->only(['id', 'name', 'slug']),
             'photoUsage' => [
                 'used' => $photoCount,

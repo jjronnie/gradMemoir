@@ -12,7 +12,7 @@ class CourseShortcodeRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_shortcode_route_redirects_to_course_slug_route(): void
+    public function test_shortcode_route_redirects_to_course_overview_route(): void
     {
         $creator = User::factory()->superadmin()->create();
         $university = University::factory()->create([
@@ -21,11 +21,12 @@ class CourseShortcodeRedirectTest extends TestCase
         $course = Course::factory()->create([
             'university_id' => $university->id,
             'created_by' => $creator->id,
+            'short_name' => 'CSE',
             'shortcode' => 'course123',
         ]);
 
         $response = $this->get('/c/course123');
 
-        $response->assertRedirect(route('courses.show', ['slug' => $course->slug]));
+        $response->assertRedirect(route('courses.overview', ['shortName' => 'cse']));
     }
 }

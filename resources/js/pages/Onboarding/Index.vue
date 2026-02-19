@@ -6,14 +6,17 @@ import UsernameInput from '@/components/UsernameInput.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { Course, University } from '@/types';
+import type { Course, CourseYear, University } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     universities: University[];
     courses: Course[];
+    courseYears: CourseYear[];
     selectedUniversityId: number | null;
+    selectedCourseId: number | null;
+    selectedCourseYearId: number | null;
     search: string;
 }>();
 
@@ -25,12 +28,14 @@ const usernameAvailable = ref<boolean | null>(null);
 const localErrors = ref<Record<string, string | null>>({
     university_id: null,
     course_id: null,
+    course_year_id: null,
     username: null,
 });
 
 const form = useForm({
     university_id: props.selectedUniversityId,
-    course_id: null as number | null,
+    course_id: props.selectedCourseId,
+    course_year_id: props.selectedCourseYearId,
     username: (page.props.auth.user?.username as string | undefined) ?? '',
     avatar: null as File | null,
 });
@@ -53,7 +58,7 @@ const filteredCourses = computed(() => {
     const term = courseSearch.value.toLowerCase();
 
     return props.courses.filter((course) =>
-        `${course.name} ${course.short_name} ${course.year}`
+        `${course.name} ${course.short_name} ${course.nickname ?? ''}`
             .toLowerCase()
             .includes(term),
     );
@@ -61,6 +66,13 @@ const filteredCourses = computed(() => {
 
 const normalizedUsername = computed(() => form.username.trim().toLowerCase());
 const usernameRegex = /^[a-z0-9_]{3,30}$/;
+const selectedCourseYearLabel = computed(() => {
+    const match = props.courseYears.find(
+        (courseYear) => courseYear.id === form.course_year_id,
+    );
+
+    return match === undefined ? null : `Class of ${match.year}`;
+});
 
 watch(
     () => form.username,
@@ -72,8 +84,10 @@ watch(
 const selectUniversity = (universityId: number): void => {
     form.university_id = universityId;
     form.course_id = null;
+    form.course_year_id = null;
     localErrors.value.university_id = null;
     localErrors.value.course_id = null;
+    localErrors.value.course_year_id = null;
 
     router.get(
         '/onboarding',
@@ -82,7 +96,34 @@ const selectUniversity = (universityId: number): void => {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            only: ['courses', 'selectedUniversityId'],
+            only: [
+                'courses',
+                'courseYears',
+                'selectedUniversityId',
+                'selectedCourseId',
+                'selectedCourseYearId',
+            ],
+        },
+    );
+};
+
+const selectCourse = (courseId: number): void => {
+    form.course_id = courseId;
+    form.course_year_id = null;
+    localErrors.value.course_id = null;
+    localErrors.value.course_year_id = null;
+
+    router.get(
+        '/onboarding',
+        {
+            university_id: form.university_id,
+            course_id: courseId,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            only: ['courseYears', 'selectedCourseId', 'selectedCourseYearId'],
         },
     );
 };
@@ -109,6 +150,16 @@ const validateCurrentStep = (): boolean => {
     }
 
     if (currentStep.value === 3) {
+        if (form.course_year_id === null) {
+            localErrors.value.course_year_id = 'Please select a cohort.';
+            return false;
+        }
+
+        localErrors.value.course_year_id = null;
+        return true;
+    }
+
+    if (currentStep.value === 4) {
         if (!usernameRegex.test(normalizedUsername.value)) {
             localErrors.value.username =
                 'Username must be 3-30 characters and contain only lowercase letters, numbers, or underscores.';
@@ -133,7 +184,7 @@ const next = (): void => {
         return;
     }
 
-    if (currentStep.value < 4) {
+    if (currentStep.value < 5) {
         currentStep.value += 1;
     }
 };
@@ -163,11 +214,11 @@ const submit = (): void => {
             <div class="space-y-2">
                 <h1 class="text-2xl font-semibold">Complete your profile</h1>
                 <p class="text-sm text-muted-foreground">
-                    Step {{ currentStep }} of 4
+                    Step {{ currentStep }} of 5
                 </p>
-                <div class="grid grid-cols-4 gap-2">
+                <div class="grid grid-cols-5 gap-2">
                     <div
-                        v-for="step in 4"
+                        v-for="step in 5"
                         :key="step"
                         class="h-1.5 rounded-full"
                         :class="
@@ -214,10 +265,10 @@ const submit = (): void => {
                 v-if="currentStep === 2"
                 class="space-y-4 rounded-xl border border-border bg-card p-4"
             >
-                <h2 class="font-semibold">Select Course</h2>
+                <h2 class="font-semibold">Select Program</h2>
                 <Input
                     v-model="courseSearch"
-                    placeholder="Search course..."
+                    placeholder="Search program..."
                 />
                 <div class="grid gap-3 md:grid-cols-2">
                     <button
@@ -230,14 +281,11 @@ const submit = (): void => {
                                 ? 'border-primary'
                                 : 'border-border'
                         "
-                        @click="
-                            form.course_id = course.id;
-                            localErrors.course_id = null;
-                        "
+                        @click="selectCourse(course.id)"
                     >
                         <p class="font-semibold">{{ course.name }}</p>
                         <p class="text-sm text-muted-foreground">
-                            {{ course.short_name }} · {{ course.year }}
+                            {{ course.short_name }}
                         </p>
                     </button>
                 </div>
@@ -249,6 +297,47 @@ const submit = (): void => {
                 v-if="currentStep === 3"
                 class="space-y-4 rounded-xl border border-border bg-card p-4"
             >
+                <h2 class="font-semibold">Select Cohort</h2>
+                <div v-if="courseYears.length > 0" class="space-y-3">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <button
+                            v-for="courseYear in courseYears"
+                            :key="courseYear.id"
+                            type="button"
+                            class="rounded-lg border p-4 text-left hover:border-primary"
+                            :class="
+                                form.course_year_id === courseYear.id
+                                    ? 'border-primary'
+                                    : 'border-border'
+                            "
+                            @click="
+                                form.course_year_id = courseYear.id;
+                                localErrors.course_year_id = null;
+                            "
+                        >
+                            <p class="font-semibold">
+                                Class of {{ courseYear.year }}
+                            </p>
+                            <p class="text-xs text-muted-foreground">
+                                {{ courseYear.slug }}
+                            </p>
+                        </button>
+                    </div>
+                </div>
+                <p
+                    v-if="selectedCourseYearLabel"
+                    class="text-sm text-muted-foreground"
+                >
+                    Selected: {{ selectedCourseYearLabel }}
+                </p>
+                <InputError :message="form.errors.course_year_id" />
+                <InputError :message="localErrors.course_year_id" />
+            </section>
+
+            <section
+                v-if="currentStep === 4"
+                class="space-y-4 rounded-xl border border-border bg-card p-4"
+            >
                 <h2 class="font-semibold">Choose Username</h2>
                 <UsernameInput
                     v-model="form.username"
@@ -258,7 +347,7 @@ const submit = (): void => {
             </section>
 
             <section
-                v-if="currentStep === 4"
+                v-if="currentStep === 5"
                 class="space-y-4 rounded-xl border border-border bg-card p-4"
             >
                 <h2 class="font-semibold">Upload Profile Photo (Optional)</h2>
@@ -277,7 +366,7 @@ const submit = (): void => {
                     Back
                 </LoadingButton>
                 <LoadingButton
-                    v-if="currentStep < 4"
+                    v-if="currentStep < 5"
                     type="button"
                     :loading="form.processing"
                     loading-text="Validating..."

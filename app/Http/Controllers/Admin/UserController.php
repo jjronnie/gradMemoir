@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateUserDetailsRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 use App\Http\Requests\UpdateUserStatusRequest;
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +25,7 @@ class UserController extends Controller
         $status = trim((string) request()->string('status'));
 
         $users = User::query()
-            ->with(['course', 'university'])
+            ->with(['course', 'courseYear', 'university'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($innerQuery) use ($search): void {
                     $innerQuery
@@ -83,6 +84,12 @@ class UserController extends Controller
     public function updateDetails(UpdateUserDetailsRequest $request, User $user): RedirectResponse
     {
         $validated = $request->validated();
+        $selectedCourseYear = isset($validated['course_year_id'])
+            ? CourseYear::query()->with('course:id,university_id')->find($validated['course_year_id'])
+            : null;
+
+        $courseId = $validated['course_id'] ?? $selectedCourseYear?->course_id;
+        $universityId = $validated['university_id'] ?? $selectedCourseYear?->course?->university_id;
 
         $user->update([
             'name' => $validated['name'],
@@ -91,8 +98,9 @@ class UserController extends Controller
             'website' => $validated['website'] ?? null,
             'is_verified' => (bool) $validated['is_verified'],
             'email_verified_at' => $validated['email_verified_at'] ?? null,
-            'university_id' => $validated['university_id'] ?? null,
-            'course_id' => $validated['course_id'] ?? null,
+            'university_id' => $universityId,
+            'course_id' => $courseId,
+            'course_year_id' => $validated['course_year_id'] ?? null,
         ]);
 
         return back()->with('success', 'User details updated.');
@@ -100,19 +108,23 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
-        $user->load(['course', 'university']);
+        $user->load(['course', 'courseYear', 'university']);
         $universities = University::query()
             ->orderBy('name')
             ->get(['id', 'name']);
         $courses = Course::query()
             ->orderBy('name')
-            ->get(['id', 'name', 'short_name', 'year', 'university_id']);
+            ->get(['id', 'name', 'short_name', 'university_id']);
+        $courseYears = CourseYear::query()
+            ->orderByDesc('year')
+            ->get(['id', 'course_id', 'year', 'slug', 'admin_id']);
 
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
             'currentUserId' => request()->user()?->id,
             'universities' => $universities,
             'courses' => $courses,
+            'courseYears' => $courseYears,
         ]);
     }
 

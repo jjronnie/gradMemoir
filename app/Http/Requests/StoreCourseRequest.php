@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCourseRequest extends FormRequest
 {
@@ -24,10 +25,14 @@ class StoreCourseRequest extends FormRequest
         return [
             'university_id' => ['required', 'integer', 'exists:universities,id'],
             'name' => ['required', 'string', 'max:255'],
-            'short_name' => ['required', 'string', 'max:50'],
+            'short_name' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('courses', 'short_name')
+                    ->where(fn ($query) => $query->where('university_id', (int) $this->input('university_id'))),
+            ],
             'nickname' => ['nullable', 'string', 'max:80'],
-            'year' => ['required', 'digits:4'],
-            'admin_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

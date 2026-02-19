@@ -5,6 +5,7 @@ namespace Tests\Feature\ClassMemoir;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -95,6 +96,10 @@ class SuperadminUserModerationTest extends TestCase
             'university_id' => $university->id,
             'created_by' => $superadmin->id,
         ]);
+        $courseYear = CourseYear::factory()->create([
+            'course_id' => $course->id,
+            'year' => '2026',
+        ]);
         $targetUser = User::factory()->unverified()->create([
             'website' => null,
             'is_verified' => false,
@@ -112,6 +117,7 @@ class SuperadminUserModerationTest extends TestCase
                 'email_verified_at' => $verifiedAt->toDateTimeString(),
                 'university_id' => $university->id,
                 'course_id' => $course->id,
+                'course_year_id' => $courseYear->id,
             ],
         );
 
@@ -129,6 +135,7 @@ class SuperadminUserModerationTest extends TestCase
         $this->assertTrue($freshUser->email_verified_at?->equalTo($verifiedAt));
         $this->assertSame($university->id, $freshUser->university_id);
         $this->assertSame($course->id, $freshUser->course_id);
+        $this->assertSame($courseYear->id, $freshUser->course_year_id);
     }
 
     public function test_superadmin_cannot_assign_course_outside_selected_university(): void
@@ -145,6 +152,10 @@ class SuperadminUserModerationTest extends TestCase
             'university_id' => $universityB->id,
             'created_by' => $superadmin->id,
         ]);
+        $courseYearOnUniversityB = CourseYear::factory()->create([
+            'course_id' => $courseOnUniversityB->id,
+            'year' => '2027',
+        ]);
 
         $response = $this->actingAs($superadmin)->put(
             route('admin.users.update', $targetUser),
@@ -157,6 +168,7 @@ class SuperadminUserModerationTest extends TestCase
                 'email_verified_at' => null,
                 'university_id' => $universityA->id,
                 'course_id' => $courseOnUniversityB->id,
+                'course_year_id' => $courseYearOnUniversityB->id,
             ],
         );
 

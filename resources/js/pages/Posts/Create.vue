@@ -26,7 +26,7 @@ const previews = computed(() =>
     })),
 );
 const photoLimit = computed(
-    () => (page.props.auth.user?.photo_limit as number | undefined) ?? 12,
+    () => (page.props.auth.user?.photo_limit as number | undefined) ?? 8,
 );
 const photoCount = computed(
     () => (page.props.auth.user?.photo_count as number | undefined) ?? 0,
@@ -67,7 +67,7 @@ const submit = async (): Promise<void> => {
 
     if (hasReachedPhotoLimit.value) {
         errors.value.photos =
-            'You have reached the maximum of 12 photos. Delete one to add another.';
+            'You have reached the maximum of 8 photos. Delete one to add another.';
         return;
     }
 

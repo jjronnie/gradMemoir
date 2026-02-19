@@ -51,7 +51,7 @@ const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
 const authenticatedLinks = computed<NavLink[]>(() => {
-    const courseSlug = (auth.value.user?.course_slug as string | null) ?? null;
+    const courseYearUrl = (auth.value.user?.course_year_url as string | null) ?? null;
     const profileUrl = (auth.value.user?.profile_url as string | null) ?? null;
     const canAddPhoto =
         ((auth.value.user?.photo_slots_remaining as number | undefined) ?? 0) >
@@ -66,7 +66,7 @@ const authenticatedLinks = computed<NavLink[]>(() => {
         },
         {
             title: 'My Course',
-            href: courseSlug === null ? '/dashboard' : `/courses/${courseSlug}`,
+            href: courseYearUrl ?? '/dashboard',
             iconClass: 'fa-solid fa-graduation-cap',
             visible: true,
         },
@@ -96,7 +96,7 @@ const desktopLinks = computed<NavLink[]>(() => authenticatedLinks.value);
 const mobileLinks = computed<NavLink[]>(() => [
     ...authenticatedLinks.value,
     {
-        title: 'Manage Course',
+        title: 'Manage Cohort',
         href: '/course-admin',
         iconClass: 'fa-solid fa-users',
         visible: auth.value.user?.roles?.includes('admin') ?? false,

@@ -39,10 +39,12 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $photoCount = null;
-        $photoLimit = 12;
+        $photoLimit = 8;
         $photoSlotsRemaining = null;
 
         if ($user !== null) {
+            $user->loadMissing('courseYear');
+
             $photoCount = Media::query()
                 ->where('model_type', Post::class)
                 ->whereIn('model_id', $user->posts()->select('id'))
@@ -77,7 +79,9 @@ class HandleInertiaRequests extends Middleware
                     'onboarding_completed' => $user->onboarding_completed,
                     'university_id' => $user->university_id,
                     'course_id' => $user->course_id,
-                    'course_slug' => $user->course?->slug,
+                    'course_year_id' => $user->course_year_id,
+                    'course_year_slug' => $user->courseYear?->slug,
+                    'course_year_url' => $user->courseYear?->slug === null ? null : '/'.$user->courseYear->slug,
                     'profile_url' => $user->profile_url,
                     'email_verified_at' => optional($user->email_verified_at)?->toIso8601String(),
                     'created_at' => optional($user->created_at)?->toIso8601String(),

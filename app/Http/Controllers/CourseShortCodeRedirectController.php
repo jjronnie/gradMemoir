@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Support\CourseYearSlugGenerator;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class CourseShortCodeRedirectController extends Controller
 {
@@ -15,6 +15,8 @@ class CourseShortCodeRedirectController extends Controller
     {
         $course = Course::query()->where('shortcode', $shortcode)->firstOrFail();
 
-        return redirect()->route('courses.show', ['slug' => $course->slug]);
+        return redirect()->route('courses.overview', [
+            'shortName' => CourseYearSlugGenerator::sanitizeShortName((string) $course->short_name),
+        ]);
     }
 }

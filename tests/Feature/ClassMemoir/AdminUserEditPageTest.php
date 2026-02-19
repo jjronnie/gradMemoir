@@ -3,6 +3,7 @@
 namespace Tests\Feature\ClassMemoir;
 
 use App\Models\Course;
+use App\Models\CourseYear;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,9 +20,13 @@ class AdminUserEditPageTest extends TestCase
         $university = University::factory()->create([
             'created_by' => $superadmin->id,
         ]);
-        Course::factory()->create([
+        $course = Course::factory()->create([
             'university_id' => $university->id,
             'created_by' => $superadmin->id,
+        ]);
+        CourseYear::factory()->create([
+            'course_id' => $course->id,
+            'year' => '2026',
         ]);
         $managedUser = User::factory()->create();
 
@@ -34,6 +39,7 @@ class AdminUserEditPageTest extends TestCase
                 ->where('currentUserId', $superadmin->id)
                 ->has('universities', 1)
                 ->has('courses', 1)
+                ->has('courseYears', 1)
             );
     }
 

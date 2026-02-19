@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
+use App\Http\Controllers\Admin\CourseYearController as AdminCourseYearController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FeaturedProfileController as AdminFeaturedProfileController;
 use App\Http\Controllers\Admin\FlagController as AdminFlagController;
@@ -12,7 +13,9 @@ use App\Http\Controllers\Api\UsernameAvailabilityController;
 use App\Http\Controllers\CourseAdminController;
 use App\Http\Controllers\CourseApplicationController;
 use App\Http\Controllers\CourseArchiveController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseShortCodeRedirectController;
+use App\Http\Controllers\CourseYearController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomeController;
@@ -28,6 +31,14 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::get('/universities', [UniversityArchiveController::class, 'index'])->name('universities.index');
 Route::get('/universities/{slug}', [UniversityArchiveController::class, 'show'])->name('universities.show');
+Route::get('/university/{slug}', [UniversityArchiveController::class, 'show'])->name('university.show');
+Route::get('/course/{shortName}-class-of-{year}', [CourseYearController::class, 'show'])
+    ->where('shortName', '[a-z0-9-]+')
+    ->where('year', '\d{4}')
+    ->name('course-years.show');
+Route::get('/course/{shortName}', [CourseController::class, 'show'])
+    ->where('shortName', '[a-z0-9-]+')
+    ->name('courses.overview');
 Route::get('/courses/{slug}', [CourseArchiveController::class, 'show'])->name('courses.show');
 Route::get('/c/{shortcode}', CourseShortCodeRedirectController::class)->name('courses.shortcode');
 
@@ -81,6 +92,8 @@ Route::prefix('admin')
         Route::resource('universities', AdminUniversityController::class)->except(['show']);
 
         Route::resource('courses', AdminCourseController::class)->except(['show']);
+        Route::post('/courses/{course}/course-years', [AdminCourseYearController::class, 'store'])->name('course-years.store');
+        Route::put('/course-years/{courseYear}/admin', [AdminCourseYearController::class, 'updateAdmin'])->name('course-years.admin');
 
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
@@ -106,7 +119,7 @@ Route::prefix('admin')
 require __DIR__.'/settings.php';
 
 Route::get('/{username}', [PublicProfileController::class, 'show'])
-    ->where('username', '^(?!login$|register$|logout$|password$|two-factor$|email$|settings$|admin$|dashboard$|onboarding$|courses$|universities$|posts$|more$|terms$|apply$|how-it-works$|auth$|api$|c$)[a-z0-9_]{3,30}$')
+    ->where('username', '^(?!login$|register$|logout$|password$|two-factor$|email$|settings$|admin$|dashboard$|onboarding$|course$|courses$|university$|universities$|posts$|more$|terms$|apply$|how-it-works$|auth$|api$|c$)[a-z0-9_]{3,30}$')
     ->name('profile.public');
 
 Route::get('/@{username}', [PublicProfileController::class, 'show'])

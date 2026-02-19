@@ -13,13 +13,13 @@ class PhotoLimitTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_cannot_add_more_than_twelve_photos(): void
+    public function test_user_cannot_add_more_than_eight_photos(): void
     {
         Storage::fake('public');
 
         $user = User::factory()->create();
 
-        for ($index = 0; $index < 12; $index++) {
+        for ($index = 0; $index < 8; $index++) {
             $post = Post::query()->create([
                 'user_id' => $user->id,
                 'body' => null,

@@ -27,7 +27,7 @@ const toggleTheme = (): void => {
                         class="block rounded-lg border border-border p-3"
                         href="/course-admin"
                     >
-                        Manage Course
+                        Manage Cohort
                     </Link>
                     <Link class="block rounded-lg border border-border p-3" href="/settings/profile">Settings</Link>
                 </template>

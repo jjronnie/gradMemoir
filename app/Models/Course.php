@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Support\CourseShortcodeGenerator;
+use App\Support\CourseYearSlugGenerator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Course extends Model
 {
@@ -22,20 +22,13 @@ class Course extends Model
         'name',
         'short_name',
         'nickname',
-        'year',
-        'slug',
         'shortcode',
-        'admin_id',
         'created_by',
     ];
 
     protected static function booted(): void
     {
         static::creating(function (self $course): void {
-            if ($course->slug === null || $course->slug === '') {
-                $course->slug = Str::slug("{$course->short_name}-class-of-{$course->year}");
-            }
-
             if ($course->shortcode === null || $course->shortcode === '') {
                 $course->shortcode = CourseShortcodeGenerator::generateUnique();
             }
@@ -43,10 +36,27 @@ class Course extends Model
 
         static::updating(function (self $course): void {
             if ($course->exists) {
-                $course->slug = $course->getOriginal('slug');
-                $course->shortcode = $course->getOriginal('shortcode');
+                $course->shortcode = (string) $course->getOriginal('shortcode');
             }
         });
+    }
+
+    public static function findByShortNameSlug(string $shortNameSlug): ?self
+    {
+        $targetSlug = CourseYearSlugGenerator::sanitizeShortName($shortNameSlug);
+
+        $courseId = static::query()
+            ->get(['id', 'short_name'])
+            ->first(function (self $course) use ($targetSlug): bool {
+                return CourseYearSlugGenerator::sanitizeShortName((string) $course->short_name) === $targetSlug;
+            })
+            ?->id;
+
+        if ($courseId === null) {
+            return null;
+        }
+
+        return static::query()->find($courseId);
     }
 
     public function university(): BelongsTo
@@ -54,9 +64,9 @@ class Course extends Model
         return $this->belongsTo(University::class);
     }
 
-    public function admin(): BelongsTo
+    public function courseYears(): HasMany
     {
-        return $this->belongsTo(User::class, 'admin_id');
+        return $this->hasMany(CourseYear::class);
     }
 
     public function createdBy(): BelongsTo

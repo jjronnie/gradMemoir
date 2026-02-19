@@ -402,7 +402,7 @@ onMounted(() => {
 
                             <Link
                                 v-else-if="row === 'course'"
-                                :href="`/courses/${profile.course?.slug}`"
+                                :href="`/${profile.course?.slug}`"
                                 class="flex items-center gap-2 hover:text-foreground"
                             >
                                 <i class="fa-solid fa-graduation-cap" />

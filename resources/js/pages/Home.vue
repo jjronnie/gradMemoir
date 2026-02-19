@@ -124,7 +124,7 @@ const tileClass = (rowIndex: number, tileIndex: number): string => {
                 </p>
             </article>
             <article class="rounded-xl border border-border bg-card p-4">
-                <h3 class="font-semibold">2. Join Your Course</h3>
+                <h3 class="font-semibold">2. Join Your Cohort</h3>
                 <p class="mt-2 text-sm text-muted-foreground">
                     Pick your university and graduation class.
                 </p>

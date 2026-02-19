@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -43,6 +44,18 @@ class University extends Model implements HasMedia
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function courseYears(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            CourseYear::class,
+            Course::class,
+            'university_id',
+            'course_id',
+            'id',
+            'id',
+        );
     }
 
     public function createdBy(): BelongsTo
