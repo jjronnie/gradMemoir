@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ConvertPostPhotosToWebp;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -110,5 +112,56 @@ class PostManagementTest extends TestCase
         $this->actingAs($otherUser)
             ->delete(route('posts.destroy', $post))
             ->assertNotFound();
+    }
+
+    public function test_user_cannot_create_post_with_caption_only_without_photo(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(
+            route('posts.store'),
+            [
+                'body' => 'Caption only post',
+            ],
+            [
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ],
+        );
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['photos']);
+    }
+
+    public function test_user_can_create_post_with_photo_and_no_caption(): void
+    {
+        Queue::fake();
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(
+            route('posts.store'),
+            [
+                'photos' => [UploadedFile::fake()->image('photo.jpg')],
+            ],
+            [
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ],
+        );
+
+        $response->assertStatus(201);
+
+        $post = Post::query()
+            ->where('user_id', $user->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($post);
+        $this->assertNull($post->body);
+        $this->assertSame(1, $post->getMedia('post_photos')->count());
+        Queue::assertPushed(ConvertPostPhotosToWebp::class);
     }
 }

@@ -60,8 +60,8 @@ const removePhoto = (index: number): void => {
 const submit = async (): Promise<void> => {
     errors.value = {};
 
-    if (body.value.trim() === '' && photos.value.length === 0) {
-        errors.value.body = 'Add a caption or at least one photo.';
+    if (photos.value.length === 0) {
+        errors.value.photos = 'Please attach at least one photo.';
         return;
     }
 

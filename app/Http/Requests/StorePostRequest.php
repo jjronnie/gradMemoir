@@ -26,7 +26,7 @@ class StorePostRequest extends FormRequest
     {
         return [
             'body' => ['nullable', 'string', 'max:5000'],
-            'photos' => ['nullable', 'array', 'max:4'],
+            'photos' => ['required', 'array', 'min:1', 'max:4'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif,avif', 'max:20480'],
         ];
     }
@@ -34,6 +34,8 @@ class StorePostRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'photos.required' => 'Please attach at least one photo.',
+            'photos.min' => 'Please attach at least one photo.',
             'photos.max' => 'You can upload up to 4 photos per post.',
             'photos.*.max' => 'Each photo must be 20MB or smaller.',
         ];
@@ -42,18 +44,12 @@ class StorePostRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            $body = trim((string) $this->input('body', ''));
-            $hasPhotos = $this->hasFile('photos');
             $requestedPhotoCount = is_array($this->file('photos')) ? count($this->file('photos')) : 0;
             $currentPhotoCount = Media::query()
                 ->where('model_type', Post::class)
                 ->whereIn('model_id', $this->user()->posts()->select('id'))
                 ->count();
             $maxPhotos = 8;
-
-            if ($body === '' && ! $hasPhotos) {
-                $validator->errors()->add('body', 'Post body or at least one photo is required.');
-            }
 
             if ($currentPhotoCount >= $maxPhotos) {
                 $validator->errors()->add('photos', 'You have reached the maximum of 8 photos. Delete a photo before adding a new one.');
