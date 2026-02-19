@@ -27,6 +27,7 @@ const page = usePage();
 const pending = ref(false);
 const available = ref<boolean | null>(null);
 const usernamePattern = /^[a-z0-9_]+$/;
+let requestVersion = 0;
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 const usernameError = computed(() => {
@@ -62,18 +63,24 @@ const validateUsername = (value: string): string | null => {
 
 const inlineError = computed(() => validateUsername(props.modelValue));
 
+const resetAvailability = (): void => {
+    available.value = null;
+    emit('availability', null);
+};
+
 const check = async (value: string): Promise<void> => {
     if (!props.checkAvailability) {
         return;
     }
 
     if (validateUsername(value) !== null) {
-        available.value = null;
-        emit('availability', null);
+        pending.value = false;
+        resetAvailability();
 
         return;
     }
 
+    const currentRequest = ++requestVersion;
     pending.value = true;
 
     try {
@@ -91,23 +98,45 @@ const check = async (value: string): Promise<void> => {
             body: JSON.stringify({ username: value }),
         });
 
+        if (currentRequest !== requestVersion) {
+            return;
+        }
+
+        if (!response.ok) {
+            resetAvailability();
+
+            return;
+        }
+
         const payload = (await response.json()) as {
             data?: { available?: boolean };
         };
 
-        available.value = payload.data?.available ?? false;
+        available.value =
+            typeof payload.data?.available === 'boolean'
+                ? payload.data.available
+                : null;
         emit('availability', available.value);
     } catch {
-        available.value = null;
-        emit('availability', null);
+        if (currentRequest !== requestVersion) {
+            return;
+        }
+
+        resetAvailability();
     } finally {
-        pending.value = false;
+        if (currentRequest === requestVersion) {
+            pending.value = false;
+        }
     }
 };
 
 watch(
     () => props.modelValue,
     (value) => {
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+
         const sanitized = sanitizeUsername(value);
 
         if (sanitized !== value) {
@@ -116,9 +145,9 @@ watch(
             return;
         }
 
-        if (timeoutId !== null) {
-            clearTimeout(timeoutId);
-        }
+        requestVersion++;
+        pending.value = false;
+        resetAvailability();
 
         timeoutId = setTimeout(() => {
             void check(value);

@@ -46,7 +46,6 @@ class OnboardingTest extends TestCase
             'university_id' => $university->id,
             'course_id' => $course->id,
             'course_year_id' => $courseYear->id,
-            'username' => 'test_user_name',
         ]);
 
         $response->assertRedirect(route('dashboard'));
@@ -58,7 +57,6 @@ class OnboardingTest extends TestCase
         $this->assertSame($university->id, $user->university_id);
         $this->assertSame($course->id, $user->course_id);
         $this->assertSame($courseYear->id, $user->course_year_id);
-        $this->assertSame('test_user_name', $user->username);
     }
 
     public function test_user_can_complete_onboarding_with_existing_cohort(): void
@@ -84,7 +82,6 @@ class OnboardingTest extends TestCase
             'university_id' => $university->id,
             'course_id' => $course->id,
             'course_year_id' => $courseYear->id,
-            'username' => 'existing_cohort_user',
         ])->assertRedirect(route('dashboard'));
 
         $user->refresh();
@@ -119,7 +116,6 @@ class OnboardingTest extends TestCase
             'university_id' => $university->id,
             'course_id' => $courseA->id,
             'course_year_id' => $courseYearOnB->id,
-            'username' => 'bad_cohort_pick',
         ])->assertSessionHasErrors('course_year_id');
     }
 }

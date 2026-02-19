@@ -60,11 +60,11 @@ Route::get('/posts/{post}/status', PostStatusController::class)
     ->middleware(['auth', 'check.status'])
     ->name('posts.status');
 
-Route::middleware(['auth', 'check.status'])->group(function () {
+Route::middleware(['auth', 'check.status', 'verified'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');
     Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
 
-    Route::middleware(['verified', 'onboarding.complete'])->group(function () {
+    Route::middleware(['onboarding.complete'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
         Route::get('/posts', [PostController::class, 'index'])->name('posts.index');

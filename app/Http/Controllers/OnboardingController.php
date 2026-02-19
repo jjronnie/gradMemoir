@@ -106,8 +106,6 @@ class OnboardingController extends Controller
                 'university_id' => $validated['university_id'],
                 'course_id' => $course->id,
                 'course_year_id' => $courseYear->id,
-                'username' => $validated['username'],
-                'username_updated_at' => now(),
                 'onboarding_completed' => true,
             ])->save();
 

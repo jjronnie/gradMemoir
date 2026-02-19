@@ -3,9 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\CourseYear;
-use App\Support\UsernameGenerator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class OnboardingCompleteRequest extends FormRequest
@@ -29,14 +27,6 @@ class OnboardingCompleteRequest extends FormRequest
             'university_id' => ['required', 'integer', 'exists:universities,id'],
             'course_id' => ['required', 'integer', 'exists:courses,id'],
             'course_year_id' => ['required', 'integer', 'exists:course_years,id'],
-            'username' => [
-                'required',
-                'string',
-                'min:3',
-                'max:30',
-                'regex:/^[a-z0-9_]+$/',
-                Rule::unique('users', 'username')->ignore($this->user()?->id),
-            ],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif,avif', 'max:20480'],
         ];
     }
@@ -44,7 +34,6 @@ class OnboardingCompleteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'username.regex' => 'Username may only contain lowercase letters, numbers, and underscores.',
             'avatar.max' => 'Profile photo must be 20MB or smaller.',
         ];
     }
@@ -68,14 +57,5 @@ class OnboardingCompleteRequest extends FormRequest
                 $validator->errors()->add('course_year_id', 'Selected cohort does not belong to the selected program.');
             }
         });
-    }
-
-    protected function prepareForValidation(): void
-    {
-        if ($this->has('username')) {
-            $this->merge([
-                'username' => UsernameGenerator::normalize(ltrim((string) $this->input('username'), '@')),
-            ]);
-        }
     }
 }

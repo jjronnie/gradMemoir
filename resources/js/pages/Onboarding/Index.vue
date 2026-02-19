@@ -2,13 +2,12 @@
 import AvatarUpload from '@/components/AvatarUpload.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
-import UsernameInput from '@/components/UsernameInput.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Course, CourseYear, University } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     universities: University[];
@@ -20,23 +19,19 @@ const props = defineProps<{
     search: string;
 }>();
 
-const page = usePage();
 const currentStep = ref(1);
 const search = ref(props.search ?? '');
 const courseSearch = ref('');
-const usernameAvailable = ref<boolean | null>(null);
 const localErrors = ref<Record<string, string | null>>({
     university_id: null,
     course_id: null,
     course_year_id: null,
-    username: null,
 });
 
 const form = useForm({
     university_id: props.selectedUniversityId,
     course_id: props.selectedCourseId,
     course_year_id: props.selectedCourseYearId,
-    username: (page.props.auth.user?.username as string | undefined) ?? '',
     avatar: null as File | null,
 });
 
@@ -64,8 +59,6 @@ const filteredCourses = computed(() => {
     );
 });
 
-const normalizedUsername = computed(() => form.username.trim().toLowerCase());
-const usernameRegex = /^[a-z0-9_]{3,30}$/;
 const selectedCourseYearLabel = computed(() => {
     const match = props.courseYears.find(
         (courseYear) => courseYear.id === form.course_year_id,
@@ -73,13 +66,6 @@ const selectedCourseYearLabel = computed(() => {
 
     return match === undefined ? null : `Class of ${match.year}`;
 });
-
-watch(
-    () => form.username,
-    () => {
-        localErrors.value.username = null;
-    },
-);
 
 const selectUniversity = (universityId: number): void => {
     form.university_id = universityId;
@@ -159,23 +145,6 @@ const validateCurrentStep = (): boolean => {
         return true;
     }
 
-    if (currentStep.value === 4) {
-        if (!usernameRegex.test(normalizedUsername.value)) {
-            localErrors.value.username =
-                'Username must be 3-30 characters and contain only lowercase letters, numbers, or underscores.';
-            return false;
-        }
-
-        if (usernameAvailable.value !== true) {
-            localErrors.value.username =
-                'Please choose an available username before continuing.';
-            return false;
-        }
-
-        localErrors.value.username = null;
-        return true;
-    }
-
     return true;
 };
 
@@ -184,7 +153,7 @@ const next = (): void => {
         return;
     }
 
-    if (currentStep.value < 5) {
+    if (currentStep.value < 4) {
         currentStep.value += 1;
     }
 };
@@ -214,11 +183,11 @@ const submit = (): void => {
             <div class="space-y-2">
                 <h1 class="text-2xl font-semibold">Complete your profile</h1>
                 <p class="text-sm text-muted-foreground">
-                    Step {{ currentStep }} of 5
+                    Step {{ currentStep }} of 4
                 </p>
-                <div class="grid grid-cols-5 gap-2">
+                <div class="grid grid-cols-4 gap-2">
                     <div
-                        v-for="step in 5"
+                        v-for="step in 4"
                         :key="step"
                         class="h-1.5 rounded-full"
                         :class="
@@ -338,18 +307,6 @@ const submit = (): void => {
                 v-if="currentStep === 4"
                 class="space-y-4 rounded-xl border border-border bg-card p-4"
             >
-                <h2 class="font-semibold">Choose Username</h2>
-                <UsernameInput
-                    v-model="form.username"
-                    @availability="usernameAvailable = $event"
-                />
-                <InputError :message="localErrors.username" />
-            </section>
-
-            <section
-                v-if="currentStep === 5"
-                class="space-y-4 rounded-xl border border-border bg-card p-4"
-            >
                 <h2 class="font-semibold">Upload Profile Photo (Optional)</h2>
                 <AvatarUpload v-model="form.avatar" />
             </section>
@@ -366,7 +323,7 @@ const submit = (): void => {
                     Back
                 </LoadingButton>
                 <LoadingButton
-                    v-if="currentStep < 5"
+                    v-if="currentStep < 4"
                     type="button"
                     :loading="form.processing"
                     loading-text="Validating..."
