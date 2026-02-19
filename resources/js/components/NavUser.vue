@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { router, usePage } from '@inertiajs/vue3';
+import { ChevronsUpDown } from 'lucide-vue-next';
+import { ref } from 'vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import {
     DropdownMenu,
@@ -13,9 +16,6 @@ import {
 } from '@/components/ui/sidebar';
 import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/routes';
-import { router, usePage } from '@inertiajs/vue3';
-import { ChevronsUpDown } from 'lucide-vue-next';
-import { ref } from 'vue';
 import UserMenuContent from './UserMenuContent.vue';
 
 const page = usePage();

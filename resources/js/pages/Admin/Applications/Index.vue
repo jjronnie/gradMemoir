@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import { Button } from '@/components/ui/button';
@@ -10,8 +12,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 type Application = {
     id: number;

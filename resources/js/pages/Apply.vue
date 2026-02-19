@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     applicant_name: '',

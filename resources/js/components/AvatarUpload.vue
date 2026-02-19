@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { usePage } from '@inertiajs/vue3';
 import { Camera, ImagePlus, UserCircle2 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
 
 const props = withDefaults(
     defineProps<{

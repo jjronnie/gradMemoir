@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import type { ButtonVariants } from '@/components/ui/button';
 import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
+import { Button } from '@/components/ui/button';
+import type { ButtonVariants } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Props extends PrimitiveProps {
     loading?: boolean;

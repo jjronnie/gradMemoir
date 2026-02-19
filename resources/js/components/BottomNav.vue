@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -6,8 +8,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { AppPageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 type MenuItem = {
     label: string;

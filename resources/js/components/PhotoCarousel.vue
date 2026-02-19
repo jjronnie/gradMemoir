@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 type Photo =
     | string

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
@@ -9,8 +11,6 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { redirect } from '@/routes/google';
 import { store } from '@/routes/register';
-import { Form, Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 const googleProcessing = ref(false);
 const showPassword = ref(false);

@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import BottomNav from '@/components/BottomNav.vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
-import UserMenuContent from '@/components/UserMenuContent.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,12 +12,11 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getInitials } from '@/composables/useInitials';
+import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useAppearance } from '@/composables/useAppearance';
+import { getInitials } from '@/composables/useInitials';
 import { logout } from '@/routes';
 import type { AppPageProps } from '@/types';
-import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 const page = usePage<AppPageProps>();

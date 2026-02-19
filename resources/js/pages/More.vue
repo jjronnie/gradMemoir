@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { useAppearance } from '@/composables/useAppearance';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import type { AppPageProps } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage<AppPageProps>();
 const { resolvedAppearance, updateAppearance } = useAppearance();

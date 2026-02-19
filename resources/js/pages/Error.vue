@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import PublicLayout from '@/layouts/PublicLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import PublicLayout from '@/layouts/PublicLayout.vue';
 
 const props = defineProps<{
     status: number;

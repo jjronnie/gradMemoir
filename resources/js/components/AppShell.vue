@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import BottomNav from '@/components/BottomNav.vue';
-import { useProgress } from '@/composables/useProgress';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import type { AppShellVariant } from '@/types';
 import { usePage } from '@inertiajs/vue3';
+import BottomNav from '@/components/BottomNav.vue';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { useProgress } from '@/composables/useProgress';
+import type { AppShellVariant } from '@/types';
 
 type Props = {
     variant?: AppShellVariant;

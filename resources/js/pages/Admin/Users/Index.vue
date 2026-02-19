@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
 
 type UserRow = {
     id: number;

@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import { useProgress } from '@/composables/useProgress';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps } from '@/types';
-import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 
 const page = usePage<AppPageProps>();
 const body = ref('');

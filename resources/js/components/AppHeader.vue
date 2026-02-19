@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Menu } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
@@ -22,9 +25,6 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { logout } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import { Link, router, usePage } from '@inertiajs/vue3';
-import { Menu } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];

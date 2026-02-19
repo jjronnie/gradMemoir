@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import InputError from '@/components/InputError.vue';
 
 const props = withDefaults(
     defineProps<{

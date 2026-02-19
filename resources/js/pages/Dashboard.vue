@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import type { AppPageProps, Post } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import type { AppPageProps, Post } from '@/types';
 
 const props = defineProps<{
     recentPosts: Post[];

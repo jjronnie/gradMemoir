@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Head, Link } from '@inertiajs/vue3';
+import { computed, onMounted, ref } from 'vue';
 import PhotoCarousel from '@/components/PhotoCarousel.vue';
 import ShareButton from '@/components/ShareButton.vue';
 import VerifiedBadgeIcon from '@/components/VerifiedBadgeIcon.vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
 
 type MediaItem = {
     original_url?: string;

@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import ShareButton from '@/components/ShareButton.vue';
 import { Input } from '@/components/ui/input';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import type { CourseYear } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref } from 'vue';
 
 type StudentCard = {
     id: number;

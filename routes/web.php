@@ -106,6 +106,8 @@ Route::prefix('admin')
         Route::post('/featured-profiles', [AdminFeaturedProfileController::class, 'store'])->name('featured-profiles.store');
         Route::delete('/featured-profiles/{featuredProfile}', [AdminFeaturedProfileController::class, 'destroy'])->name('featured-profiles.destroy');
         Route::put('/featured-profiles/{featuredProfile}', [AdminFeaturedProfileController::class, 'update'])->name('featured-profiles.update');
+        Route::post('/featured-profiles/images', [AdminFeaturedProfileController::class, 'storeImage'])->name('featured-profiles.images.store');
+        Route::delete('/featured-profiles/images/{featuredImage}', [AdminFeaturedProfileController::class, 'destroyImage'])->name('featured-profiles.images.destroy');
 
         Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
         Route::put('/applications/{courseApplication}', [AdminApplicationController::class, 'update'])->name('applications.update');

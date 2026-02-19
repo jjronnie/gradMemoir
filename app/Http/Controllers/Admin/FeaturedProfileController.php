@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FeaturedImageStoreRequest;
 use App\Http\Requests\FeaturedProfileStoreRequest;
+use App\Jobs\ConvertFeaturedImageToWebp;
+use App\Models\FeaturedImage;
 use App\Models\FeaturedProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,8 +43,14 @@ class FeaturedProfileController extends Controller
             ->limit($search === '' ? 0 : 30)
             ->get(['id', 'name', 'username', 'email']);
 
+        $featuredImages = FeaturedImage::query()
+            ->with('media')
+            ->orderByDesc('created_at')
+            ->get();
+
         return Inertia::render('Admin/FeaturedProfiles/Index', [
             'featuredProfiles' => $featuredProfiles,
+            'featuredImages' => $featuredImages,
             'search' => $search,
             'searchResults' => $searchResults,
         ]);
@@ -75,5 +85,39 @@ class FeaturedProfileController extends Controller
         $featuredProfile->delete();
 
         return back()->with('success', 'Featured profile removed.');
+    }
+
+    public function storeImage(FeaturedImageStoreRequest $request): RedirectResponse
+    {
+        $uploadedImages = $request->file('images', []);
+
+        if ($uploadedImages instanceof UploadedFile) {
+            $uploadedImages = [$uploadedImages];
+        }
+
+        foreach ($uploadedImages as $uploadedImage) {
+            $featuredImage = FeaturedImage::query()->create([
+                'created_by' => $request->user()->id,
+                'is_ready' => false,
+            ]);
+
+            $featuredImage->addMedia($uploadedImage)
+                ->withCustomProperties([
+                    'uploaded_by' => $request->user()->id,
+                ])
+                ->toMediaCollection('featured_images');
+
+            ConvertFeaturedImageToWebp::dispatch($featuredImage);
+        }
+
+        return back()->with('success', 'Featured images uploaded.');
+    }
+
+    public function destroyImage(FeaturedImage $featuredImage): RedirectResponse
+    {
+        $featuredImage->clearMediaCollection('featured_images');
+        $featuredImage->delete();
+
+        return back()->with('success', 'Featured image removed.');
     }
 }

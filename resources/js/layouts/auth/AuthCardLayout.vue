@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {
@@ -9,7 +10,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { home } from '@/routes';
-import { Link } from '@inertiajs/vue3';
 
 defineProps<{
     title?: string;

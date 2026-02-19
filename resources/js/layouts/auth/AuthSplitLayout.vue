@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import { home } from '@/routes';
-import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const name = page.props.name;

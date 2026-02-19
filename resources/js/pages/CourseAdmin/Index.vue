@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
 import { Button } from '@/components/ui/button';
@@ -12,8 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 type Member = {
     id: number;

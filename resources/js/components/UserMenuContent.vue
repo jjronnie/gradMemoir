@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { GraduationCap, Images, LogOut, Settings } from 'lucide-vue-next';
+import { computed } from 'vue';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -8,9 +11,6 @@ import {
 import UserInfo from '@/components/UserInfo.vue';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { GraduationCap, Images, LogOut, Settings } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 type Props = {
     user: User;

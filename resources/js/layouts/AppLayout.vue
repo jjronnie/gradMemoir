@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppHeaderLayout from '@/layouts/app/AppHeaderLayout.vue';
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];

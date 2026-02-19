@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import PhotoCarousel from '@/components/PhotoCarousel.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 
 type PostPhoto = {
     id: number;

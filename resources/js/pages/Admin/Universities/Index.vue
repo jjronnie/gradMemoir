@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import ConfirmActionModal from '@/components/ConfirmActionModal.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 type University = {
     id: number;

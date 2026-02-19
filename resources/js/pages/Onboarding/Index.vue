@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import AvatarUpload from '@/components/AvatarUpload.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingButton from '@/components/LoadingButton.vue';
@@ -6,8 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { Course, CourseYear, University } from '@/types';
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 
 const props = defineProps<{
     universities: University[];
