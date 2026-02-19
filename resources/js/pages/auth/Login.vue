@@ -63,7 +63,7 @@ const resetTurnstile = (): void => {
             :transform="
                 (data) => ({
                     ...data,
-                    turnstile_token: turnstile.token.value,
+                    'cf-turnstile-response': turnstile.token.value,
                 })
             "
             @finish="resetTurnstile"
@@ -159,6 +159,17 @@ const resetTurnstile = (): void => {
                     </Label>
                 </div>
 
+                <TurnstileWidget
+                    v-if="turnstileEnabled"
+                    @verified="turnstile.setToken($event)"
+                    @expired="turnstile.reset()"
+                    @widget-mounted="turnstile.setWidgetId($event)"
+                />
+                <InputError
+                    v-if="turnstileEnabled"
+                    :message="errors['cf-turnstile-response']"
+                />
+
                 <Button
                     type="submit"
                     class="mt-4 w-full"
@@ -170,14 +181,6 @@ const resetTurnstile = (): void => {
                     Log in
                 </Button>
             </div>
-
-            <TurnstileWidget
-                v-if="turnstileEnabled"
-                @verified="turnstile.setToken($event)"
-                @expired="turnstile.reset()"
-                @widget-mounted="turnstile.setWidgetId($event)"
-            />
-            <InputError v-if="turnstileEnabled" :message="errors.turnstile" />
 
             <div
                 class="text-center text-sm text-muted-foreground"

@@ -14,7 +14,7 @@ class TurnstileVerifier
             return false;
         }
 
-        $secretKey = config('services.turnstile.secret_key');
+        $secretKey = config('services.turnstile.secret') ?? config('services.turnstile.secret_key');
 
         return is_string($secretKey) && $secretKey !== '';
     }
@@ -25,7 +25,7 @@ class TurnstileVerifier
             return true;
         }
 
-        $secretKey = config('services.turnstile.secret_key');
+        $secretKey = config('services.turnstile.secret') ?? config('services.turnstile.secret_key');
         $token = trim($token);
 
         if ($token === '') {

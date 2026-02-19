@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Post;
-use App\Support\TurnstileVerifier;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -39,6 +38,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $turnstileSiteKey = (string) (config('services.turnstile.key') ?? config('services.turnstile.site_key') ?? '');
         $photoCount = null;
         $photoLimit = 12;
         $photoSlotsRemaining = null;
@@ -92,8 +92,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'turnstileEnabled' => TurnstileVerifier::shouldValidate(),
-            'turnstileSiteKey' => config('services.turnstile.site_key'),
+            'turnstileEnabled' => $turnstileSiteKey !== '',
+            'turnstileSiteKey' => $turnstileSiteKey,
         ];
     }
 }

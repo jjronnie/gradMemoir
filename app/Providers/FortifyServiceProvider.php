@@ -5,14 +5,12 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
-use App\Support\TurnstileVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -53,11 +51,11 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureAuthentication(): void
     {
         Fortify::authenticateUsing(function (Request $request): ?User {
-            $token = (string) $request->input('turnstile_token', $request->input('cf-turnstile-response'));
-
-            if (! TurnstileVerifier::verify($token, $request->ip())) {
-                throw ValidationException::withMessages([
-                    'turnstile' => 'Turnstile verification failed. Please try again.',
+            if (app()->environment('production')) {
+                $request->validate([
+                    'cf-turnstile-response' => ['required', 'turnstile'],
+                ], [
+                    'cf-turnstile-response.required' => 'Turnstile verification is required.',
                 ]);
             }
 

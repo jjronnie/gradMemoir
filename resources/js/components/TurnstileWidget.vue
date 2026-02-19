@@ -37,20 +37,13 @@ const siteKey = computed(
     () => (page.props.turnstileSiteKey as string | undefined) ?? '',
 );
 
-const loadScript = async (): Promise<void> => {
-    if (window.turnstile !== undefined) {
-        return;
-    }
+const waitForTurnstile = async (): Promise<void> => {
+    let attempts = 0;
 
-    await new Promise<void>((resolve) => {
-        const script = document.createElement('script');
-        script.src =
-            'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => resolve();
-        document.head.appendChild(script);
-    });
+    while (window.turnstile === undefined && attempts < 40) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        attempts += 1;
+    }
 };
 
 onMounted(async () => {
@@ -62,7 +55,7 @@ onMounted(async () => {
         return;
     }
 
-    await loadScript();
+    await waitForTurnstile();
 
     if (window.turnstile === undefined || container.value === null) {
         return;

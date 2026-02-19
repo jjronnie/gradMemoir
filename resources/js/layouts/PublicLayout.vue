@@ -2,13 +2,22 @@
 import AppLogo from '@/components/AppLogo.vue';
 import BottomNav from '@/components/BottomNav.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
+import UserMenuContent from '@/components/UserMenuContent.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { getInitials } from '@/composables/useInitials';
 import { useAppearance } from '@/composables/useAppearance';
+import type { AppPageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
-const page = usePage();
+const page = usePage<AppPageProps>();
 const appName = computed(
     () =>
         (page.props.appName as string | undefined) ??
@@ -79,6 +88,33 @@ const toggleTheme = (): void => {
                             "
                         />
                     </Button>
+                    <DropdownMenu v-if="authUser">
+                        <DropdownMenuTrigger :as-child="true">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="relative size-10 w-auto rounded-full p-1 focus-within:ring-2 focus-within:ring-primary"
+                            >
+                                <Avatar
+                                    class="size-8 overflow-hidden rounded-full"
+                                >
+                                    <AvatarImage
+                                        v-if="authUser.avatar"
+                                        :src="authUser.avatar"
+                                        :alt="authUser.name"
+                                    />
+                                    <AvatarFallback
+                                        class="rounded-full bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
+                                    >
+                                        {{ getInitials(authUser.name) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" class="w-56">
+                            <UserMenuContent :user="authUser" />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>

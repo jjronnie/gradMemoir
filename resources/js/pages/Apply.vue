@@ -23,17 +23,17 @@ const form = useForm({
     course_name: '',
     year: '',
     notes: '',
-    turnstile_token: '',
+    'cf-turnstile-response': '',
 });
 
 const submit = (): void => {
-    form.turnstile_token = turnstile.token.value;
+    form['cf-turnstile-response'] = turnstile.token.value;
 
     form.post('/apply', {
         onFinish: () => {
             if (turnstileEnabled.value) {
                 turnstile.reset();
-                form.turnstile_token = '';
+                form['cf-turnstile-response'] = '';
             }
         },
     });
@@ -132,7 +132,7 @@ const submit = (): void => {
                 />
                 <InputError
                     v-if="turnstileEnabled"
-                    :message="form.errors.turnstile"
+                    :message="form.errors['cf-turnstile-response']"
                 />
 
                 <LoadingButton

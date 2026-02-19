@@ -37,7 +37,7 @@ Route::get('/more', [MoreController::class, 'index'])->name('more');
 Route::get('/account-suspended', [MoreController::class, 'accountSuspended'])->name('account.suspended');
 
 Route::get('/apply', [CourseApplicationController::class, 'create'])->name('apply.create');
-Route::post('/apply', [CourseApplicationController::class, 'store'])->middleware('turnstile')->name('apply.store');
+Route::post('/apply', [CourseApplicationController::class, 'store'])->name('apply.store');
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
@@ -56,8 +56,12 @@ Route::middleware(['auth', 'check.status'])->group(function () {
     Route::middleware(['verified', 'onboarding.complete'])->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+        Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
         Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+        Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
         Route::get('/course-admin', CourseAdminController::class)
             ->middleware('role:admin')
@@ -102,7 +106,7 @@ Route::prefix('admin')
 require __DIR__.'/settings.php';
 
 Route::get('/{username}', [PublicProfileController::class, 'show'])
-    ->where('username', '^(?!login$|register$|logout$|password$|two-factor$|email$|settings$|admin$|dashboard$|onboarding$|courses$|universities$|more$|terms$|apply$|how-it-works$|auth$|api$|c$)[a-z0-9_]{3,30}$')
+    ->where('username', '^(?!login$|register$|logout$|password$|two-factor$|email$|settings$|admin$|dashboard$|onboarding$|courses$|universities$|posts$|more$|terms$|apply$|how-it-works$|auth$|api$|c$)[a-z0-9_]{3,30}$')
     ->name('profile.public');
 
 Route::get('/@{username}', [PublicProfileController::class, 'show'])

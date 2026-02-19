@@ -21,7 +21,7 @@ class CourseApplicationStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'applicant_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\d+$/', 'min:7', 'max:20'],
@@ -30,6 +30,12 @@ class CourseApplicationStoreRequest extends FormRequest
             'year' => ['required', 'digits:4'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
+
+        if (app()->environment('production')) {
+            $rules['cf-turnstile-response'] = ['required', 'turnstile'];
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -37,6 +43,7 @@ class CourseApplicationStoreRequest extends FormRequest
         return [
             'phone.regex' => 'WhatsApp phone number must contain digits only.',
             'year.digits' => 'Year must be exactly 4 digits.',
+            'cf-turnstile-response.required' => 'Turnstile verification is required.',
         ];
     }
 }

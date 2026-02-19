@@ -81,10 +81,16 @@ const greeting = computed(() => {
                     >
                         Add Memories
                     </Link>
+                    <Link
+                        href="/posts"
+                        class="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"
+                    >
+                        My Posts
+                    </Link>
                 </div>
             </section>
 
-            <section class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <section class="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
                 <Link
                     :href="
                         user?.course_slug ? `/courses/${user.course_slug}` : '/dashboard'
@@ -92,6 +98,12 @@ const greeting = computed(() => {
                     class="rounded-xl border border-border bg-card p-4 hover:border-primary"
                 >
                     My Course Archive
+                </Link>
+                <Link
+                    href="/posts"
+                    class="rounded-xl border border-border bg-card p-4 hover:border-primary"
+                >
+                    My Posts
                 </Link>
                 <Link
                     :href="user?.profile_url ?? '#'"

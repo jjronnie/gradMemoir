@@ -5,14 +5,18 @@ namespace App\Providers;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\RegisterResponse;
 use App\Listeners\PruneOriginalMediaAfterConversion;
+use App\Support\TurnstileVerifier;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use RyanChandler\LaravelCloudflareTurnstile\Facades\Turnstile as TurnstileFacade;
+use RyanChandler\LaravelCloudflareTurnstile\Testing\FakeClient as TurnstileFakeClient;
 use Spatie\MediaLibrary\Conversions\Events\ConversionHasBeenCompletedEvent;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerTurnstileValidationRule();
         $this->registerMediaListeners();
     }
 
@@ -57,5 +62,20 @@ class AppServiceProvider extends ServiceProvider
     protected function registerMediaListeners(): void
     {
         Event::listen(ConversionHasBeenCompletedEvent::class, PruneOriginalMediaAfterConversion::class);
+    }
+
+    protected function registerTurnstileValidationRule(): void
+    {
+        Validator::extend('turnstile', static function (string $attribute, mixed $value): bool {
+            if (! is_string($value) || trim($value) === '') {
+                return false;
+            }
+
+            if (TurnstileFacade::getFacadeRoot() instanceof TurnstileFakeClient) {
+                return TurnstileFacade::siteverify($value)->success;
+            }
+
+            return TurnstileVerifier::verify($value, request()->ip());
+        }, 'Turnstile verification failed. Please try again.');
     }
 }

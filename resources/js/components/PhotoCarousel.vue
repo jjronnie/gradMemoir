@@ -83,6 +83,9 @@ const currentPhoto = computed<NormalizedPhoto | null>(
 );
 
 const canNavigate = computed(() => normalizedPhotos.value.length > 1);
+const trackStyle = computed(() => ({
+    transform: `translateX(-${currentIndex.value * 100}%)`,
+}));
 
 const previous = (): void => {
     if (!canNavigate.value) {
@@ -218,14 +221,25 @@ onUnmounted(() => {
                     @touchstart.passive="onTouchStart"
                     @touchend.passive="onTouchEnd"
                 >
-                    <img
-                        v-if="currentPhoto?.url"
-                        :src="currentPhoto.url"
-                        alt="Photo"
-                        class="max-h-[72vh] w-full select-none object-contain"
-                        loading="eager"
-                        draggable="false"
-                    />
+                    <div
+                        class="flex transition-transform duration-300 ease-out will-change-transform"
+                        :style="trackStyle"
+                    >
+                        <div
+                            v-for="(photo, index) in normalizedPhotos"
+                            :key="`carousel-photo-${index}`"
+                            class="w-full shrink-0"
+                        >
+                            <img
+                                v-if="photo.url"
+                                :src="photo.url"
+                                alt="Photo"
+                                class="max-h-[72vh] w-full select-none object-contain"
+                                loading="eager"
+                                draggable="false"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <div

@@ -3,10 +3,12 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
+use RyanChandler\LaravelCloudflareTurnstile\Facades\Turnstile;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -21,7 +23,6 @@ class AuthenticationTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('auth/Login')
-                ->where('turnstileEnabled', false)
             );
     }
 
@@ -36,6 +37,42 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_turnstile_is_required_in_production(): void
+    {
+        $this->app['env'] = 'production';
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+        Turnstile::fake();
+
+        $user = User::factory()->create();
+
+        $response = $this->from(route('login'))->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('cf-turnstile-response');
+        $this->assertGuest();
+    }
+
+    public function test_users_can_authenticate_in_production_with_turnstile(): void
+    {
+        $this->app['env'] = 'production';
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+        Turnstile::fake();
+
+        $user = User::factory()->create();
+
+        $response = $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+            'cf-turnstile-response' => Turnstile::dummy(),
+        ]);
+
+        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()

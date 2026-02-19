@@ -1,14 +1,27 @@
 <script setup lang="ts">
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { AppPageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-type NavItem = {
+type MenuItem = {
     label: string;
     href: string;
+};
+
+type NavItem = {
+    label: string;
     iconClass: string;
     visible: boolean;
     active: boolean;
+    type: 'link' | 'menu';
+    href?: string;
+    menuItems?: MenuItem[];
     emphasized?: boolean;
 };
 
@@ -28,6 +41,7 @@ const canAddPhoto = computed(() => {
 const superadminItems = computed<NavItem[]>(() => [
     {
         label: 'Dashboard',
+        type: 'link',
         href: '/admin/dashboard',
         iconClass: 'fa-solid fa-gauge',
         visible: true,
@@ -35,6 +49,7 @@ const superadminItems = computed<NavItem[]>(() => [
     },
     {
         label: 'Universities',
+        type: 'link',
         href: '/admin/universities',
         iconClass: 'fa-solid fa-building-columns',
         visible: true,
@@ -42,6 +57,7 @@ const superadminItems = computed<NavItem[]>(() => [
     },
     {
         label: 'Courses',
+        type: 'link',
         href: '/admin/courses',
         iconClass: 'fa-solid fa-graduation-cap',
         visible: true,
@@ -49,6 +65,7 @@ const superadminItems = computed<NavItem[]>(() => [
     },
     {
         label: 'Users',
+        type: 'link',
         href: '/admin/users',
         iconClass: 'fa-solid fa-users',
         visible: true,
@@ -56,6 +73,7 @@ const superadminItems = computed<NavItem[]>(() => [
     },
     {
         label: 'Flags',
+        type: 'link',
         href: '/admin/flags',
         iconClass: 'fa-solid fa-flag',
         visible: true,
@@ -69,14 +87,16 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
 
     return [
         {
-            label: 'Home',
-            href: '/',
-            iconClass: 'fa-solid fa-house',
+            label: 'Dashboard',
+            type: 'link',
+            href: '/dashboard',
+            iconClass: 'fa-solid fa-gauge',
             visible: true,
-            active: currentUrl.value === '/',
+            active: currentUrl.value.startsWith('/dashboard'),
         },
         {
             label: 'My Course',
+            type: 'link',
             href: courseSlug !== '' ? `/courses/${courseSlug}` : '/dashboard',
             iconClass: 'fa-solid fa-graduation-cap',
             visible: true,
@@ -84,6 +104,7 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
         },
         {
             label: 'Add Photo',
+            type: 'link',
             href: '/posts/create',
             iconClass: 'fa-solid fa-plus',
             visible: canAddPhoto.value,
@@ -92,6 +113,7 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
         },
         {
             label: 'Profile',
+            type: 'link',
             href: profileUrl,
             iconClass: 'fa-solid fa-user',
             visible: true,
@@ -99,6 +121,7 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
         },
         {
             label: 'More',
+            type: 'link',
             href: '/more',
             iconClass: 'fa-solid fa-ellipsis',
             visible: true,
@@ -110,27 +133,40 @@ const studentOrAdminItems = computed<NavItem[]>(() => {
 const guestItems = computed<NavItem[]>(() => [
     {
         label: 'Home',
+        type: 'link',
         href: '/',
         iconClass: 'fa-solid fa-house',
         visible: true,
         active: currentUrl.value === '/',
     },
     {
-        label: 'Login',
-        href: '/login',
-        iconClass: 'fa-solid fa-right-to-bracket',
-        visible: currentUrl.value !== '/login',
-        active: currentUrl.value === '/login',
+        label: 'Universities',
+        type: 'link',
+        href: '/universities',
+        iconClass: 'fa-solid fa-building-columns',
+        visible: true,
+        active: currentUrl.value.startsWith('/universities'),
     },
     {
-        label: 'Register',
-        href: '/register',
-        iconClass: 'fa-solid fa-user-plus',
-        visible: currentUrl.value !== '/register',
-        active: currentUrl.value === '/register',
+        label: 'Login',
+        type: 'menu',
+        iconClass: 'fa-solid fa-right-to-bracket',
+        visible: true,
+        active: currentUrl.value === '/login' || currentUrl.value === '/register',
+        menuItems: [
+            {
+                label: 'Login',
+                href: '/login',
+            },
+            {
+                label: 'Register',
+                href: '/register',
+            },
+        ],
     },
     {
         label: 'More',
+        type: 'link',
         href: '/more',
         iconClass: 'fa-solid fa-ellipsis',
         visible: true,
@@ -162,31 +198,75 @@ const navGridStyle = computed(() => ({
         aria-label="Bottom navigation"
     >
         <div class="mx-auto grid max-w-xl gap-1 px-2 pt-2" :style="navGridStyle">
-            <Link
-                v-for="item in visibleItems"
-                :key="item.label"
-                :href="item.href"
-                class="flex items-center justify-center rounded-md px-2 py-1.5"
-                :class="[
-                    item.active ? 'text-foreground' : 'text-muted-foreground',
-                    item.emphasized ? 'relative -mt-5' : '',
-                ]"
-                :aria-label="item.label"
-            >
-                <span
-                    class="flex h-8 w-8 items-center justify-center rounded-full"
-                    :class="
-                        item.emphasized
-                            ? 'border border-border bg-primary text-primary-foreground shadow-lg'
-                            : item.active
-                              ? 'bg-accent text-accent-foreground'
-                              : 'hover:bg-accent/70'
-                    "
+            <template v-for="item in visibleItems" :key="item.label">
+                <Link
+                    v-if="item.type === 'link'"
+                    :href="item.href!"
+                    class="flex items-center justify-center rounded-md px-2 py-1.5"
+                    :class="[
+                        item.active ? 'text-foreground' : 'text-muted-foreground',
+                        item.emphasized ? 'relative -mt-5' : '',
+                    ]"
+                    :aria-label="item.label"
                 >
-                    <i :class="item.iconClass" />
-                </span>
-                <span class="sr-only">{{ item.label }}</span>
-            </Link>
+                    <span
+                        class="flex h-8 w-8 items-center justify-center rounded-full"
+                        :class="
+                            item.emphasized
+                                ? 'border border-border bg-primary text-primary-foreground shadow-lg'
+                                : item.active
+                                  ? 'bg-accent text-accent-foreground'
+                                  : 'hover:bg-accent/70'
+                        "
+                    >
+                        <i :class="item.iconClass" />
+                    </span>
+                    <span class="sr-only">{{ item.label }}</span>
+                </Link>
+
+                <DropdownMenu v-else>
+                    <DropdownMenuTrigger :as-child="true">
+                        <button
+                            type="button"
+                            class="flex items-center justify-center rounded-md px-2 py-1.5"
+                            :class="
+                                item.active
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground'
+                            "
+                            :aria-label="item.label"
+                        >
+                            <span
+                                class="flex h-8 w-8 items-center justify-center rounded-full"
+                                :class="
+                                    item.active
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'hover:bg-accent/70'
+                                "
+                            >
+                                <i :class="item.iconClass" />
+                            </span>
+                            <span class="sr-only">{{ item.label }}</span>
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        align="center"
+                        side="top"
+                        :side-offset="10"
+                        class="w-40"
+                    >
+                        <DropdownMenuItem
+                            v-for="menuItem in item.menuItems ?? []"
+                            :key="menuItem.href"
+                            :as-child="true"
+                        >
+                            <Link :href="menuItem.href" class="w-full">
+                                {{ menuItem.label }}
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </template>
         </div>
     </nav>
 </template>

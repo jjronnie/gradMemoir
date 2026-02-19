@@ -6,10 +6,8 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Enums\UserRole;
 use App\Models\User;
-use App\Support\TurnstileVerifier;
 use App\Support\UsernameGenerator;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -23,17 +21,18 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        Validator::make($input, [
+        $rules = [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
-            'turnstile_token' => ['nullable', 'string'],
-        ])->validate();
+        ];
 
-        if (! TurnstileVerifier::verify((string) ($input['turnstile_token'] ?? ''))) {
-            throw ValidationException::withMessages([
-                'turnstile' => 'Turnstile verification failed. Please try again.',
-            ]);
+        if (app()->environment('production')) {
+            $rules['cf-turnstile-response'] = ['required', 'turnstile'];
         }
+
+        Validator::make($input, $rules, [
+            'cf-turnstile-response.required' => 'Turnstile verification is required.',
+        ])->validate();
 
         return User::create([
             'name' => $input['name'],

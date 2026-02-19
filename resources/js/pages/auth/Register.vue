@@ -50,7 +50,7 @@ const resetTurnstile = (): void => {
             :transform="
                 (data) => ({
                     ...data,
-                    turnstile_token: turnstile.token.value,
+                    'cf-turnstile-response': turnstile.token.value,
                 })
             "
             @finish="resetTurnstile"
@@ -183,6 +183,17 @@ const resetTurnstile = (): void => {
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
+                <TurnstileWidget
+                    v-if="turnstileEnabled"
+                    @verified="turnstile.setToken($event)"
+                    @expired="turnstile.reset()"
+                    @widget-mounted="turnstile.setWidgetId($event)"
+                />
+                <InputError
+                    v-if="turnstileEnabled"
+                    :message="errors['cf-turnstile-response']"
+                />
+
                 <Button
                     type="submit"
                     class="mt-2 w-full"
@@ -194,14 +205,6 @@ const resetTurnstile = (): void => {
                     Create account
                 </Button>
             </div>
-
-            <TurnstileWidget
-                v-if="turnstileEnabled"
-                @verified="turnstile.setToken($event)"
-                @expired="turnstile.reset()"
-                @widget-mounted="turnstile.setWidgetId($event)"
-            />
-            <InputError v-if="turnstileEnabled" :message="errors.turnstile" />
 
             <div class="text-center text-sm text-muted-foreground">
                 Already have an account?

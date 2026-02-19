@@ -323,7 +323,7 @@ onMounted(() => {
                 >
                     <button
                         type="button"
-                        class="h-72 w-full overflow-hidden rounded-3xl border border-border bg-muted sm:h-80 lg:h-96"
+                        class="h-80 w-full overflow-hidden rounded-3xl border border-border bg-muted sm:h-96 lg:h-[30rem]"
                         @click="isProfileImageOpen = true"
                     >
                         <img
