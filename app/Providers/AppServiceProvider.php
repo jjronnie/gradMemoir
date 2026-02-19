@@ -15,8 +15,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
-use RyanChandler\LaravelCloudflareTurnstile\Facades\Turnstile as TurnstileFacade;
-use RyanChandler\LaravelCloudflareTurnstile\Testing\FakeClient as TurnstileFakeClient;
 use Spatie\MediaLibrary\Conversions\Events\ConversionHasBeenCompletedEvent;
 
 class AppServiceProvider extends ServiceProvider
@@ -71,8 +69,15 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
-            if (TurnstileFacade::getFacadeRoot() instanceof TurnstileFakeClient) {
-                return TurnstileFacade::siteverify($value)->success;
+            $turnstileFacadeClass = 'RyanChandler\\LaravelCloudflareTurnstile\\Facades\\Turnstile';
+            $turnstileFakeClientClass = 'RyanChandler\\LaravelCloudflareTurnstile\\Testing\\FakeClient';
+
+            if (class_exists($turnstileFacadeClass) && class_exists($turnstileFakeClientClass)) {
+                $turnstileClient = $turnstileFacadeClass::getFacadeRoot();
+
+                if ($turnstileClient instanceof $turnstileFakeClientClass) {
+                    return $turnstileFacadeClass::siteverify($value)->success;
+                }
             }
 
             return TurnstileVerifier::verify($value, request()->ip());
