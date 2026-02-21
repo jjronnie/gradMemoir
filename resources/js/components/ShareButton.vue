@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useShareButton } from '@/composables/useShareButton';
 
 const props = defineProps<{
     url: string;
     title: string;
+    inline?: boolean;
 }>();
 
 const { isVisible } = useShareButton(200);
 const expanded = ref(false);
 const copied = ref(false);
+const showControl = computed(() => props.inline === true || isVisible.value);
 
 const toggle = (): void => {
     expanded.value = !expanded.value;
@@ -34,12 +36,17 @@ const copyLink = async (): Promise<void> => {
         leave-to-class="translate-x-3 opacity-0"
     >
         <div
-            v-if="isVisible"
-            class="fixed top-1/2 right-4 z-40 -translate-y-1/2 space-y-2"
+            v-if="showControl"
+            :class="
+                props.inline === true
+                    ? 'relative z-40'
+                    : 'fixed top-1/2 right-4 -translate-y-1/2 space-y-2'
+            "
         >
             <Button
                 size="icon"
-                class="rounded-full shadow-lg"
+                class="rounded-full"
+                :class="{ 'shadow-lg': props.inline !== true }"
                 aria-label="Toggle share options"
                 @click="toggle"
             >
@@ -49,6 +56,11 @@ const copyLink = async (): Promise<void> => {
             <div
                 v-if="expanded"
                 class="w-48 space-y-2 rounded-xl border bg-card p-3 text-sm shadow-xl"
+                :class="
+                    props.inline === true
+                        ? 'absolute top-full right-0 mt-2'
+                        : ''
+                "
             >
                 <Button
                     variant="secondary"

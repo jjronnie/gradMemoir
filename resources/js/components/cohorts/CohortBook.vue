@@ -96,6 +96,7 @@ const isFlipAnimating = ref(false);
 const pendingResizeUpdate = ref(false);
 const pendingRebuild = ref(false);
 const observedStageSize = ref({ width: 0, height: 0 });
+const currentPageIndex = ref(0);
 const universityLogoFailed = ref(false);
 const brokenStudentImageIds = ref<Set<number>>(new Set());
 
@@ -354,6 +355,8 @@ const bookPagesSignature = computed(() => {
         .map((student) => `${student.id}-${student.name}-${student.nickname ?? ''}-${student.quote ?? ''}`)
         .join('|')}`;
 });
+const canFlipPrev = computed(() => currentPageIndex.value > 0);
+const canFlipNext = computed(() => currentPageIndex.value < bookPages.value.length - 1);
 
 const updateIsMobile = (): void => {
     isMobile.value = window.matchMedia('(max-width: 767px)').matches;
@@ -410,6 +413,7 @@ const destroyFlip = (): void => {
     pageFlip.value.destroy();
     pageFlip.value = null;
     isFlipAnimating.value = false;
+    currentPageIndex.value = 0;
 };
 
 /**
@@ -449,7 +453,7 @@ const initializeFlip = async (startPage = 0): Promise<void> => {
         startZIndex: 10,
         maxShadowOpacity: 0.35,
         drawShadow: true,
-        disableFlipByClick: false,
+        disableFlipByClick: true,
         startPage: safeStartPage,
     });
 
@@ -460,6 +464,8 @@ const initializeFlip = async (startPage = 0): Promise<void> => {
         if (state !== 'read') {
             return;
         }
+
+        syncCurrentPageIndex();
 
         if (pendingResizeUpdate.value) {
             pendingResizeUpdate.value = false;
@@ -480,9 +486,14 @@ const initializeFlip = async (startPage = 0): Promise<void> => {
             instance.turnToPage(safeStartPage);
         }
 
+        syncCurrentPageIndex();
         syncStageSize();
         isFlipReady.value = true;
         isInitializing.value = false;
+    });
+
+    instance.on('flip', () => {
+        syncCurrentPageIndex();
     });
 
     const pages = collectPageElements();
@@ -557,15 +568,79 @@ const onWindowResize = (): void => {
     }
 };
 
+const syncCurrentPageIndex = (): void => {
+    if (pageFlip.value === null) {
+        return;
+    }
+
+    currentPageIndex.value = pageFlip.value.getCurrentPageIndex();
+};
+
+const runAnimatedFlip = (direction: 'next' | 'prev'): void => {
+    if (pageFlip.value === null) {
+        return;
+    }
+
+    const instance = pageFlip.value;
+    const startingPage = instance.getCurrentPageIndex();
+    const settings = instance.getSettings() as unknown as { disableFlipByClick: boolean };
+    const originalDisableFlipByClick = settings.disableFlipByClick;
+
+    settings.disableFlipByClick = false;
+
+    if (direction === 'next') {
+        instance.flipNext('top');
+    } else {
+        instance.flipPrev('top');
+    }
+
+    settings.disableFlipByClick = originalDisableFlipByClick;
+
+    setTimeout(() => {
+        if (pageFlip.value === null) {
+            return;
+        }
+
+        const current = pageFlip.value.getCurrentPageIndex();
+        const state = pageFlip.value.getState();
+
+        if (state === 'read' && current === startingPage) {
+            if (direction === 'next') {
+                pageFlip.value.turnToNextPage();
+            } else {
+                pageFlip.value.turnToPrevPage();
+            }
+
+            syncCurrentPageIndex();
+        }
+    }, 90);
+};
+
+const flipPrevPage = (): void => {
+    if (isFlipAnimating.value || !canFlipPrev.value || pageFlip.value === null) {
+        return;
+    }
+
+    runAnimatedFlip('prev');
+};
+
+const flipNextPage = (): void => {
+    if (isFlipAnimating.value || !canFlipNext.value || pageFlip.value === null) {
+        return;
+    }
+
+    runAnimatedFlip('next');
+};
+
 const onKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        pageFlip.value?.flipPrev('top');
+        flipPrevPage();
     }
 
     if (event.key === 'ArrowRight') {
         event.preventDefault();
-        pageFlip.value?.flipNext('top');
+        flipNextPage();
     }
 };
 
@@ -777,6 +852,27 @@ watch(
                 </div>
             </div>
         </div>
+
+        <div v-if="isFlipReady" class="book-navigation">
+            <button
+                type="button"
+                class="book-nav-button"
+                :disabled="!canFlipPrev || isFlipAnimating"
+                aria-label="Go to previous page"
+                @click="flipPrevPage"
+            >
+                <i class="fa-solid fa-chevron-left text-xs" />
+            </button>
+            <button
+                type="button"
+                class="book-nav-button"
+                :disabled="!canFlipNext || isFlipAnimating"
+                aria-label="Go to next page"
+                @click="flipNextPage"
+            >
+                <i class="fa-solid fa-chevron-right text-xs" />
+            </button>
+        </div>
     </section>
 </template>
 
@@ -786,6 +882,36 @@ watch(
 .book-stage {
     position: relative;
     isolation: isolate;
+}
+
+.book-navigation {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.7rem;
+}
+
+.book-nav-button {
+    display: inline-flex;
+    height: 2.15rem;
+    width: 2.15rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(162, 120, 42, 0.5);
+    color: #a2782a;
+    background: rgba(247, 244, 238, 0.88);
+    transition: all 160ms ease;
+}
+
+.book-nav-button:hover:not(:disabled) {
+    background: #f7f4ee;
+    border-color: rgba(162, 120, 42, 0.75);
+}
+
+.book-nav-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .book-spine-shadow {
@@ -1265,6 +1391,15 @@ watch(
     .student-nickname,
     .student-quote {
         font-size: 0.66rem;
+    }
+
+    .book-navigation {
+        margin-top: 0.7rem;
+    }
+
+    .book-nav-button {
+        height: 2rem;
+        width: 2rem;
     }
 }
 </style>

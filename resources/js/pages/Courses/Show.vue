@@ -262,6 +262,12 @@ onMounted(() => {
                         >
                             Print
                         </button>
+
+                        <ShareButton
+                            inline
+                            :url="currentUrl"
+                            :title="`${courseYear.course.name} Class of ${courseYear.year} - ${$page.props.appName}`"
+                        />
                     </div>
                 </div>
             </section>
@@ -328,11 +334,6 @@ onMounted(() => {
                     >Next</Link
                 >
             </section>
-
-            <ShareButton
-                :url="currentUrl"
-                :title="`${courseYear.course.name} Class of ${courseYear.year} - ${$page.props.appName}`"
-            />
         </div>
 
         <div v-if="canPrint" class="print-only">
