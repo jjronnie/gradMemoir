@@ -26,6 +26,11 @@ class CourseYearPolicy
         return $user->role === UserRole::Admin && $courseYear->admin_id === $user->id;
     }
 
+    public function exportYearbook(User $user, CourseYear $courseYear): bool
+    {
+        return $user->role === UserRole::Superadmin;
+    }
+
     public function assignAdmin(User $user): bool
     {
         return $user->role === UserRole::Superadmin;

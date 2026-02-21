@@ -26,6 +26,7 @@ class UpdateProfileSettingsRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'nickname' => ['nullable', 'string', 'max:80'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user()?->id)],
             'username' => [
                 'required',
@@ -37,6 +38,7 @@ class UpdateProfileSettingsRequest extends FormRequest
             ],
             'bio' => ['nullable', 'string'],
             'profession' => ['nullable', 'string', 'max:255'],
+            'quote' => ['nullable', 'string', 'max:120'],
             'location' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'regex:/^\d+$/', 'max:20'],
             'facebook_username' => ['nullable', 'string', 'max:255'],
@@ -65,6 +67,12 @@ class UpdateProfileSettingsRequest extends FormRequest
             if ($bio !== '' && str_word_count($bio) > 100) {
                 $validator->errors()->add('bio', 'Bio may not exceed 100 words.');
             }
+
+            $quote = trim((string) $this->input('quote', ''));
+
+            if ($quote !== '' && str_word_count($quote) > 8) {
+                $validator->errors()->add('quote', 'Quote may not exceed 8 words.');
+            }
         });
     }
 
@@ -83,6 +91,17 @@ class UpdateProfileSettingsRequest extends FormRequest
 
             $this->merge([
                 'website' => $normalized === '' ? null : $normalized,
+            ]);
+        }
+
+        foreach (['nickname', 'quote', 'profession', 'location'] as $field) {
+            if (! $this->has($field)) {
+                continue;
+            }
+
+            $value = trim((string) $this->input($field));
+            $this->merge([
+                $field => $value === '' ? null : $value,
             ]);
         }
     }

@@ -44,6 +44,44 @@ class ProfileUpdateTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_profile_quote_may_not_exceed_eight_words(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'nickname' => 'Buddy',
+                'email' => $user->email,
+                'username' => $user->username,
+                'quote' => 'One two three four five six seven eight nine',
+            ])
+            ->assertSessionHasErrors('quote')
+            ->assertRedirect(route('profile.edit'));
+    }
+
+    public function test_profile_nickname_and_quote_can_be_updated(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'nickname' => 'Builder',
+                'email' => $user->email,
+                'username' => $user->username,
+                'quote' => 'Learn daily, build boldly',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'));
+
+        $user->refresh();
+
+        $this->assertSame('Builder', $user->nickname);
+        $this->assertSame('Learn daily, build boldly', $user->quote);
+    }
+
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged()
     {
         $user = User::factory()->create();

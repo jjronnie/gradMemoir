@@ -39,7 +39,7 @@ class CourseArchiveSearchTest extends TestCase
             'university_id' => $course->university_id,
         ]);
 
-        $this->get('/course/csc-class-of-2026?search=alpha')
+        $this->get('/course/csc-class-of-2026?view=grid&search=alpha')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Courses/Show')
@@ -78,6 +78,74 @@ class CourseArchiveSearchTest extends TestCase
                 ->component('Courses/Show')
                 ->has('students.data', 1)
                 ->where('students.data.0.id', $activeStudent->id)
+            );
+    }
+
+    public function test_course_archive_view_query_is_exposed_and_sanitized(): void
+    {
+        $course = Course::factory()->create([
+            'short_name' => 'MKT',
+        ]);
+        CourseYear::factory()->create([
+            'course_id' => $course->id,
+            'year' => '2026',
+        ]);
+
+        $this->get('/course/mkt-class-of-2026?view=book')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Courses/Show')
+                ->where('view', 'book')
+            );
+
+        $this->get('/course/mkt-class-of-2026?view=invalid')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Courses/Show')
+                ->where('view', 'book')
+            );
+
+        $this->get('/course/mkt-class-of-2026')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Courses/Show')
+                ->where('view', 'book')
+            );
+    }
+
+    public function test_course_archive_book_view_ignores_search_filter(): void
+    {
+        $course = Course::factory()->create([
+            'short_name' => 'MKT',
+        ]);
+        $courseYear = CourseYear::factory()->create([
+            'course_id' => $course->id,
+            'year' => '2026',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Alpha Search',
+            'username' => 'alpha_search',
+            'course_id' => $course->id,
+            'course_year_id' => $courseYear->id,
+            'university_id' => $course->university_id,
+        ]);
+
+        User::factory()->create([
+            'name' => 'Beta Student',
+            'username' => 'beta_student',
+            'course_id' => $course->id,
+            'course_year_id' => $courseYear->id,
+            'university_id' => $course->university_id,
+        ]);
+
+        $this->get('/course/mkt-class-of-2026?view=book&search=alpha')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Courses/Show')
+                ->where('view', 'book')
+                ->where('search', '')
+                ->has('students.data', 2)
             );
     }
 }

@@ -173,3 +173,46 @@
         @apply bg-background text-foreground;
     }
 }
+
+.print-only {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+        margin: 0 !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    header,
+    footer,
+    nav,
+    [role='dialog'] {
+        display: none !important;
+    }
+
+    main {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+}

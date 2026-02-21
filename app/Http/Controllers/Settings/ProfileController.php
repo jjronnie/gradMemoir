@@ -75,6 +75,7 @@ class ProfileController extends Controller
                 'owner_username' => ltrim((string) $user->username, '@'),
             ])
             ->toMediaCollection('avatar');
+        $user->touch();
 
         return to_route('profile.edit')->with('success', 'Profile photo updated.');
     }

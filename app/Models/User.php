@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -32,6 +33,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'nickname',
         'email',
         'email_verified_at',
         'password',
@@ -43,6 +45,7 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         'is_verified',
         'bio',
         'profession',
+        'quote',
         'location',
         'phone',
         'facebook_username',
@@ -102,6 +105,16 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
             if ($user->role === null) {
                 $user->role = UserRole::Student;
             }
+        });
+
+        static::saved(function (self $user): void {
+            static::bumpCourseYearArchiveCacheVersion($user->course_year_id);
+            static::bumpCourseYearArchiveCacheVersion($user->getOriginal('course_year_id'));
+        });
+
+        static::deleted(function (self $user): void {
+            static::bumpCourseYearArchiveCacheVersion($user->course_year_id);
+            static::bumpCourseYearArchiveCacheVersion($user->getOriginal('course_year_id'));
         });
     }
 
@@ -217,5 +230,17 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail
         return Attribute::make(
             get: fn (): string => '/@'.$this->username,
         );
+    }
+
+    private static function bumpCourseYearArchiveCacheVersion(mixed $courseYearId): void
+    {
+        if (! is_numeric($courseYearId)) {
+            return;
+        }
+
+        $cacheKey = 'course-year:'.(int) $courseYearId.':students:version';
+        $currentVersion = (int) Cache::get($cacheKey, 1);
+
+        Cache::forever($cacheKey, $currentVersion + 1);
     }
 }

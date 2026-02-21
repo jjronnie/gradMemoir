@@ -1,8 +1,19 @@
 export type User = {
     id: number;
     name: string;
+    nickname?: string | null;
     email: string;
     username: string;
+    bio?: string | null;
+    profession?: string | null;
+    quote?: string | null;
+    location?: string | null;
+    phone?: string | null;
+    facebook_username?: string | null;
+    x_username?: string | null;
+    tiktok_username?: string | null;
+    instagram_username?: string | null;
+    email_public?: string | null;
     website?: string | null;
     is_verified?: boolean;
     avatar?: string;

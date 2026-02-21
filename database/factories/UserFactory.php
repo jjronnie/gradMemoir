@@ -34,6 +34,7 @@ class UserFactory extends Factory
 
         return [
             'name' => fake()->name(),
+            'nickname' => null,
             'email' => fake()->unique()->safeEmail(),
             'google_id' => null,
             'username' => $username,
@@ -43,6 +44,7 @@ class UserFactory extends Factory
             'is_verified' => false,
             'bio' => null,
             'profession' => null,
+            'quote' => null,
             'location' => null,
             'phone' => null,
             'facebook_username' => null,

@@ -36,6 +36,11 @@ Route::get('/course/{shortName}-class-of-{year}', [CourseYearController::class, 
     ->where('shortName', '[a-z0-9-]+')
     ->where('year', '\d{4}')
     ->name('course-years.show');
+Route::get('/course/{shortName}-class-of-{year}/print', [CourseYearController::class, 'print'])
+    ->middleware(['auth', 'check.status', 'verified'])
+    ->where('shortName', '[a-z0-9-]+')
+    ->where('year', '\d{4}')
+    ->name('course-years.print');
 Route::get('/course/{shortName}', [CourseController::class, 'show'])
     ->where('shortName', '[a-z0-9-]+')
     ->name('courses.overview');

@@ -19,7 +19,12 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post('/apply');
+    form.post('/apply', {
+        onSuccess: () => {
+            form.reset();
+            form.clearErrors();
+        },
+    });
 };
 </script>
 

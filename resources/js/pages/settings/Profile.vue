@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AvatarUpload from '@/components/AvatarUpload.vue';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
@@ -24,10 +25,12 @@ const user = page.props.auth.user;
 
 const form = useForm({
     name: user?.name ?? '',
+    nickname: (user?.nickname as string | undefined) ?? '',
     email: user?.email ?? '',
     username: user?.username ?? '',
     bio: (user?.bio as string | undefined) ?? '',
     profession: (user?.profession as string | undefined) ?? '',
+    quote: (user?.quote as string | undefined) ?? '',
     location: (user?.location as string | undefined) ?? '',
     phone: (user?.phone as string | undefined) ?? '',
     facebook_username: (user?.facebook_username as string | undefined) ?? '',
@@ -43,7 +46,26 @@ const avatarForm = useForm({
     avatar: null as File | null,
 });
 
+const quoteWordCount = computed(() => {
+    const trimmedQuote = form.quote.trim();
+
+    if (trimmedQuote === '') {
+        return 0;
+    }
+
+    return trimmedQuote.split(/\s+/).filter((word) => word !== '').length;
+});
+
+const hasQuoteWordLimitError = computed(() => quoteWordCount.value > 8);
+
 const submitProfile = (): void => {
+    if (hasQuoteWordLimitError.value) {
+        form.setError('quote', 'Quote may not exceed 8 words.');
+
+        return;
+    }
+
+    form.clearErrors('quote');
     form.put('/settings/profile');
 };
 
@@ -108,6 +130,16 @@ const submitAvatar = (): void => {
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="grid gap-2">
+                            <Label for="nickname">Nickname</Label>
+                            <Input
+                                id="nickname"
+                                v-model="form.nickname"
+                                maxlength="80"
+                                placeholder='e.g. "The Visionary"'
+                            />
+                            <InputError :message="form.errors.nickname" />
+                        </div>
+                        <div class="grid gap-2">
                             <Label for="profession">Profession</Label>
                             <Input
                                 id="profession"
@@ -115,6 +147,29 @@ const submitAvatar = (): void => {
                                 placeholder="e.g. Photographer"
                             />
                             <InputError :message="form.errors.profession" />
+                        </div>
+                        <div class="grid gap-2 md:col-span-2">
+                            <Label for="quote">Short Quote (max 8 words)</Label>
+                            <Input
+                                id="quote"
+                                v-model="form.quote"
+                                maxlength="120"
+                                placeholder="e.g. Rise, build, and leave impact."
+                                @input="form.clearErrors('quote')"
+                            />
+                            <div class="flex items-center justify-between">
+                                <InputError :message="form.errors.quote" />
+                                <p
+                                    class="text-xs"
+                                    :class="
+                                        hasQuoteWordLimitError
+                                            ? 'text-destructive'
+                                            : 'text-muted-foreground'
+                                    "
+                                >
+                                    {{ quoteWordCount }}/8 words
+                                </p>
+                            </div>
                         </div>
                         <div class="grid gap-2">
                             <Label for="location">Location</Label>
